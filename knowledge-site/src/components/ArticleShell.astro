@@ -1,0 +1,121 @@
+---
+const {
+  title,
+  backHref,
+  backLabel,
+  headings = []
+} = Astro.props;
+
+const tocItems = headings
+  .filter((heading) => heading.depth >= 2 && heading.depth <= 3)
+  .map((heading) => ({
+    depth: heading.depth,
+    slug: heading.slug,
+    text: heading.text
+  }));
+---
+
+<div class="article-shell" data-article-shell>
+  {tocItems.length > 0 && (
+    <>
+      <div class="toc-hover-zone" aria-hidden="true" data-toc-hover-zone></div>
+      <button class="toc-toggle" type="button" aria-expanded="false" aria-controls="article-toc" data-toc-toggle>
+        <span aria-hidden="true">☰</span>
+        <span>目录</span>
+      </button>
+      <aside class="toc-drawer" id="article-toc" data-toc-drawer>
+        <div class="toc-header">
+          <strong>文章目录</strong>
+          <button class="toc-close" type="button" aria-label="收起目录" data-toc-close>×</button>
+        </div>
+        <nav class="toc-list" aria-label="文章目录">
+          {tocItems.map((item) => (
+            <a class:list={['toc-link', item.depth === 3 && 'is-nested']} href={`#${item.slug}`}>
+              {item.text}
+            </a>
+          ))}
+        </nav>
+      </aside>
+      <div class="toc-scrim" data-toc-scrim></div>
+    </>
+  )}
+
+  <article class="article">
+    <a class="back-link" href={backHref}>{backLabel}</a>
+    <h1>{title}</h1>
+    <slot />
+  </article>
+</div>
+
+<script>
+  const shells = document.querySelectorAll('[data-article-shell]');
+
+  shells.forEach((shell) => {
+    const toggle = shell.querySelector('[data-toc-toggle]');
+    const drawer = shell.querySelector('[data-toc-drawer]');
+    const hoverZone = shell.querySelector('[data-toc-hover-zone]');
+    const close = shell.querySelector('[data-toc-close]');
+    const scrim = shell.querySelector('[data-toc-scrim]');
+    const links = shell.querySelectorAll('.toc-link');
+
+    if (!toggle || !drawer) return;
+
+    let isPinned = false;
+    let closeTimer;
+    const canHoverOpen = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+    const setOpen = (open) => {
+      drawer.classList.toggle('is-open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+      shell.classList.toggle('toc-open', open);
+    };
+
+    const scheduleClose = () => {
+      window.clearTimeout(closeTimer);
+      closeTimer = window.setTimeout(() => {
+        if (!isPinned) setOpen(false);
+      }, 180);
+    };
+
+    const openByHover = () => {
+      if (!canHoverOpen()) return;
+      window.clearTimeout(closeTimer);
+      setOpen(true);
+    };
+
+    hoverZone?.addEventListener('mouseenter', openByHover);
+    toggle.addEventListener('mouseenter', openByHover);
+    drawer.addEventListener('mouseenter', openByHover);
+    hoverZone?.addEventListener('mouseleave', scheduleClose);
+    toggle.addEventListener('mouseleave', scheduleClose);
+    drawer.addEventListener('mouseleave', scheduleClose);
+
+    toggle.addEventListener('click', () => {
+      const nextOpen = !drawer.classList.contains('is-open');
+      isPinned = nextOpen;
+      setOpen(nextOpen);
+    });
+
+    close?.addEventListener('click', () => {
+      isPinned = false;
+      setOpen(false);
+    });
+    scrim?.addEventListener('click', () => {
+      isPinned = false;
+      setOpen(false);
+    });
+    document.addEventListener('click', (event) => {
+      if (!drawer.classList.contains('is-open')) return;
+      if (toggle.contains(event.target) || drawer.contains(event.target)) return;
+
+      isPinned = false;
+      setOpen(false);
+    });
+    links.forEach((link) => {
+      link.addEventListener('click', () => {
+        isPinned = false;
+        setOpen(false);
+      });
+    });
+  });
+</script>

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>Architecture Overview — Knowledge Site</title>
+</head>
+<body>
+  <main>
+    <h1>Architecture Overview — Knowledge Site</h1>
+    <section>
+      <h2>目标</h2>
+      <p>使用 Astro + Markdown 将当前个人知识库导出为可部署、可手机访问的静态 HTML 网站。</p>
+    </section>
+    <section>
+      <h2>组件职责</h2>
+      <table>
+        <thead><tr><th>组件</th><th>职责</th></tr></thead>
+        <tbody>
+          <tr><td>Astro pages</td><td>首页、个人介绍、项目经验、技术笔记、AI Workflow 文章路由。</td></tr>
+          <tr><td>sync-content.mjs</td><td>从父目录知识库同步公开 Markdown 和简历资源。</td></tr>
+          <tr><td>src/content</td><td>构建时 Markdown 内容副本。</td></tr>
+          <tr><td>public/resume</td><td>PDF 与 HTML 简历等静态资源。</td></tr>
+          <tr><td>dist</td><td>构建后可部署的纯静态网站。</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section>
+      <h2>Mermaid</h2>
+      <pre><code>flowchart LR
+  A[Source Markdown] --> B[scripts/sync-content.mjs]
+  B --> C[src/content]
+  B --> D[public/resume]
+  C --> E[Astro Routes]
+  D --> E
+  E --> F[dist static HTML]
+  F --> G[Phone / Desktop Browser]</code></pre>
+    </section>
+    <section>
+      <h2>公开边界</h2>
+      <p>默认只接入 `01-resume/current`、`03-project-experience` 顶层项目总结、`04-technical-notes`、`05-ai-workflow-skills`。`02-interview`、`99-archive`、项目内 `skills/` 证据材料默认不发布。</p>
+    </section>
+  </main>
+</body>
+</html>

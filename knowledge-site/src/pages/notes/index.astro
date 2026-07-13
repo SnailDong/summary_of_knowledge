@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageBack from '../../components/PageBack.astro';
+
+const studyCount = Object.keys(import.meta.glob('../../content/notes/**/study*.md')).length;
+const allNotes = Object.keys(import.meta.glob('../../content/notes/**/*.md'));
+const technicalCount = allNotes.filter((path) => !path.split('/').at(-1).startsWith('study') && path.split('/').at(-1).toLowerCase() !== 'readme.md').length;
+---
+
+<BaseLayout title="技术笔记 - Summary of Knowledge">
+  <PageBack />
+  <section class="section-header">
+    <p class="eyebrow">Technical Notes</p>
+    <h1>技术笔记</h1>
+    <p>这里先分成学习笔记和技术笔记两类，方便按阅读目的进入。</p>
+  </section>
+
+  <div class="article-grid">
+    <a class="article-card" href="/notes/study/">
+      <span>{studyCount} 篇</span>
+      <strong>学习笔记</strong>
+      <p>按学习过程记录的 Android UI、源码阅读和实践笔记。</p>
+    </a>
+    <a class="article-card" href="/notes/technical/">
+      <span>{technicalCount} 篇</span>
+      <strong>技术笔记</strong>
+      <p>Java、Android Framework、性能优化、开源库、网络数据库等主题笔记。</p>
+    </a>
+  </div>
+</BaseLayout>

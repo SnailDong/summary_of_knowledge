@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>陈国栋 · 简历</title>
+<style>
+  :root{
+    --navy:#2b3145;
+    --navy2:#3a4258;
+    --bg:#eef1f8;
+    --card:#ffffff;
+    --ink:#1f2430;
+    --ink2:#3a4150;
+    --muted:#6b7280;
+    --line:#e6e9f2;
+    --accent:#2b3145;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{background:var(--bg);}
+  body{
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei","Hiragino Sans GB",
+                "Noto Sans CJK SC",sans-serif;
+    color:var(--ink);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{
+    max-width:880px;
+    margin:0 auto;
+    background:var(--bg);
+    position:relative;
+    overflow:hidden;
+  }
+
+  /* ===== Header ===== */
+  .header{
+    position:relative;
+    background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);
+    padding:34px 40px 0;
+    overflow:hidden;
+  }
+  /* decorative concentric circles */
+  .header .deco{
+    position:absolute;
+    top:-60px;right:-40px;
+    width:340px;height:340px;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.08);
+    pointer-events:none;
+  }
+  .header .deco::before,.header .deco::after{
+    content:"";position:absolute;border-radius:50%;
+    border:1px solid rgba(255,255,255,.07);
+  }
+  .header .deco::before{top:40px;left:40px;right:40px;bottom:40px;}
+  .header .deco::after{top:85px;left:85px;right:85px;bottom:85px;border-color:rgba(255,255,255,.05);}
+
+  .photo-wrap{
+    display:flex;justify-content:center;
+    position:relative;z-index:3;
+  }
+  .photo{
+    width:124px;height:124px;border-radius:50%;
+    background:#f4f6fb;
+    border:5px solid #fff;
+    box-shadow:0 6px 18px rgba(0,0,0,.18);
+    display:flex;align-items:center;justify-content:center;
+    color:#aab1c2;font-size:13px;letter-spacing:1px;
+    /* 照片占位：之后把你的证件照设为背景或插入 <img> 即可 */
+    background-image:
+      repeating-linear-gradient(45deg,#f4f6fb 0 10px,#eef1f8 10px 20px);
+  }
+  .photo span{background:rgba(255,255,255,.85);padding:2px 8px;border-radius:8px;}
+
+  .curve{
+    display:block;width:100%;height:46px;margin-top:18px;
+    position:relative;z-index:2;
+  }
+
+  /* ===== Identity ===== */
+  .identity{
+    text-align:center;
+    margin-top:-6px;
+    padding:0 40px 6px;
+    position:relative;z-index:2;
+  }
+  .identity h1{
+    font-family:"Times New Roman",Georgia,"Songti SC","SimSun",serif;
+    font-size:30px;font-weight:700;letter-spacing:1px;color:var(--ink);
+  }
+  .identity .contact{
+    margin-top:10px;color:var(--ink2);font-size:15px;
+  }
+  .identity .contact .sep{color:#c2c7d4;margin:0 8px;}
+  .identity .tagline{
+    margin-top:6px;color:var(--muted);font-size:14px;
+  }
+
+  /* ===== Body ===== */
+  .body{padding:14px 40px 48px;}
+  .section{margin-top:26px;}
+  .section-title{
+    font-family:"Times New Roman",Georgia,"Songti SC","SimSun",serif;
+    font-size:21px;font-weight:700;color:var(--ink);
+    margin-bottom:12px;padding-left:2px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px 24px;
+    box-shadow:0 2px 10px rgba(43,49,69,.04);
+  }
+  .card + .card{margin-top:16px;}
+
+  /* item header row */
+  .row{
+    display:flex;justify-content:space-between;align-items:baseline;
+    gap:16px;flex-wrap:wrap;
+  }
+  .org{font-size:16px;font-weight:700;color:var(--ink);}
+  .when{font-size:14px;color:var(--muted);white-space:nowrap;}
+  .sub-row{
+    display:flex;justify-content:space-between;align-items:baseline;
+    gap:16px;flex-wrap:wrap;margin-top:3px;
+  }
+  .role{font-size:14.5px;color:var(--ink2);}
+  .where{font-size:14px;color:var(--muted);}
+
+  ul.bullets{list-style:none;margin:12px 0 0;}
+  ul.bullets li{
+    position:relative;padding-left:18px;margin:7px 0;
+    font-size:14.5px;color:var(--ink2);
+  }
+  ul.bullets li::before{
+    content:"";position:absolute;left:2px;top:9px;
+    width:6px;height:6px;border-radius:50%;background:var(--accent);
+  }
+  ul.bullets li b{color:var(--ink);font-weight:600;}
+
+  .meta-line{font-size:14px;color:var(--muted);margin-top:8px;}
+  .meta-line b{color:var(--ink2);font-weight:600;}
+  .summary{font-size:15px;color:var(--ink2);}
+
+  /* skills */
+  .skill-group{margin-top:4px;}
+  .skill-group + .skill-group{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);}
+  .skill-group h4{font-size:15px;color:var(--ink);margin-bottom:6px;}
+
+  /* education / one-liner cards */
+  .edu .org{font-size:16px;}
+  .edu .course{font-size:14px;color:var(--muted);margin-top:8px;}
+
+  @media print{
+    html,body{background:#fff;}
+    .page{max-width:none;box-shadow:none;}
+    .card{box-shadow:none;break-inside:avoid;}
+    .section{break-inside:avoid-page;}
+    .header .deco{display:none;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="deco"></div>
+    <div class="photo-wrap">
+      <!-- 照片占位：之后将下面 div 换成 <img src="你的照片.jpg" class="photo"> 即可 -->
+      <div class="photo"><span>照片</span></div>
+    </div>
+    <svg class="curve" viewBox="0 0 1200 46" preserveAspectRatio="none">
+      <path d="M0,0 Q600,80 1200,0 L1200,46 L0,46 Z" fill="#eef1f8"></path>
+    </svg>
+  </header>
+
+  <!-- Identity -->
+  <div class="identity">
+    <h1>陈国栋</h1>
+    <div class="contact">
+      +86 178 5232 6900 <span class="sep">|</span> xdong67@163.com <span class="sep">|</span> 1999.06 <span class="sep">|</span> 中共党员
+    </div>
+    <div class="tagline">高级移动端 / 全栈开发工程师 · IoT 智能家居</div>
+  </div>
+
+  <div class="body">
+
+    <!-- 个人总结 -->
+    <section class="section">
+      <div class="section-title">个人总结</div>
+      <div class="card">
+        <p class="summary">
+          5 年移动端 / 全栈开发经验，技术栈覆盖 Flutter（Dart）、Android（Kotlin / Framework）、
+          iOS（OC / Swift）、Go 后端与 Next.js 后台。现任 ADDX 设备绑定与售后保修两条业务线架构负责人，
+          0→1 主导 2 套生产级 SDK，并推动团队 AI 驱动研发体系（Harness Engineering）落地。
+          具备从车载 Framework 层到 IoT 跨端全栈的工程能力，擅长六边形架构、ADR 驱动决策与跨仓锁步协同。
+        </p>
+      </div>
+    </section>
+
+    <!-- 工作经历 -->
+    <section class="section">
+      <div class="section-title">工作经历</div>
+
+      <div class="card">
+        <div class="row">
+          <div class="org">ADDX</div>
+          <div class="when">2025.03 — 至今</div>
+        </div>
+        <div class="sub-row">
+          <div class="role">高级移动端开发工程师</div>
+          <div class="where">深圳</div>
+        </div>
+        <ul class="bullets">
+          <li>作为<b>设备绑定与售后保修两条业务线的架构负责人</b>，负责 IoT 平台 Vico Smart Home 及消费端 App（KiwiBit / VicoHome / VicoNature / SafeMo）核心研发，技术覆盖 Flutter / Android / iOS / Go / Next.js 全栈。</li>
+          <li><b>0→1 主导 2 套生产级 SDK</b>：Warranty Plus 售后全栈（Go + Flutter Split-API SDK + Next.js Admin + 可观测，三 App 复用）、Provisioning Kit 配网 SDK（六边形架构，53 天三代演进），两套合计输出 74 个 ADR。</li>
+          <li><b>跨端 / 跨仓工程治理</b>：主导设备绑定特性在 Android / iOS / Flutter / iOS Core SDK <b>4 仓锁步演进</b>，建立"同分支 + 双端一致 commit + 同日合入"的协同范式。</li>
+          <li><b>AI 工程化体系</b>：设计「CLAUDE.md 架构约束 + 自研 quality_gate + ADR 驱动 + golden-data TDD」双层框架，推动 [AI-Generated] commit tag 团队公约（跨 5 仓 <b>203 个</b> AI 提交可审计、可归因）。</li>
+          <li><b>车载 → IoT 跨域迁移</b>：将 Framework 层（Binder IPC / 状态机 / 多设备互联）经验系统化迁移到 BLE 配网 / 跨协议设备绑定 / 全栈售后系统。</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div class="org">德赛西威汽车电子股份有限公司</div>
+          <div class="when">2022.06 — 2025.03</div>
+        </div>
+        <div class="sub-row">
+          <div class="role">Android 应用开发工程师</div>
+          <div class="where">惠州</div>
+        </div>
+        <ul class="bullets">
+          <li>负责车载互联应用需求分析、DD / RD 文档编写、软件开发与互联服务 SDK 开发。</li>
+          <li>负责 Framework 层 TBoxService 开发；开发与维护平台互联服务共版代码，重构旧平台代码提升维护效率。</li>
+          <li>负责奇瑞、保时捷、小鹏车载互联项目量产交付。</li>
+          <li>申请<b>多设备互联连接管理策略</b>技术专利。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 项目经历 -->
+    <section class="section">
+      <div class="section-title">项目经历</div>
+
+      <div class="card">
+        <div class="row">
+          <div class="org">Provisioning Kit — 设备绑定模块架构迁移</div>
+          <div class="when">2026.03 — 至今</div>
+        </div>
+        <div class="sub-row">
+          <div class="role">架构负责人</div>
+        </div>
+        <div class="meta-line"><b>技术栈：</b>Flutter/Dart · Dart Workspace(melos) · MethodChannel · Native AAR · BLE · WiFi · Matter</div>
+        <ul class="bullets">
+          <li>六边形（Ports &amp; Adapters）+ Split API：纯接口包（零外部运行时依赖）+ 实现包，5 个宿主 Port 注入、单向依赖，跨宿主复用、只读消费方零依赖传染。</li>
+          <li>native 配网核心历经 <b>v1（自研 channel）→ v2（Dart FFI）→ v3（native AAR + session API）三代演进</b>，ADR 驱动 + 分阶段迁移（非 big-bang），底层三次替换、上层 Port 契约不变。</li>
+          <li>Fake 测试装配 + L1–L4 分层 CI 质量门控，强硬件依赖的配网流程在无真机环境即可端到端验证。</li>
+          <li><b>价值：</b>新消费端接入从"复制代码 + 适配双端"降为"实现 5 个 Port Adapter"；30+ 配网页面内聚进 SDK；53 天完成三代演进 + 22 个 ADR。</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div class="org">Homebase 新型号功能及页面开发</div>
+          <div class="when">2025.10 — 2026.01</div>
+        </div>
+        <div class="meta-line"><b>技术栈：</b>Flutter/Dart · Android Kotlin · iOS OC/Swift · iOS Core SDK · BLE · WiFi · Matter</div>
+        <ul class="bullets">
+          <li><b>端到端功能与页面</b>：相机绑 Hub 流程、设备卡片、固件版本校验页、在线/离线双路径换网页面、HB1 解绑保留配对页——主导跨 <b>4 仓锁步演进</b>，固件版本门控路由新旧流程。</li>
+          <li><b>底层绑定架构</b>：双模式 Permission Guard（蓝牙未开 / 权限未授权状态隔离）、SingleTask 导航隔离绑定路径、统一 MethodChannel 双端 API 契约。</li>
+          <li><b>绑定数据脱敏框架</b>：KeyBased（字段名）+ ValueBased（正则）双层规则引擎，配置驱动、业务层零侵入。</li>
+          <li><b>价值：</b>支撑新硬件 HB1 按期上架与 Vico VH 4.0.0 准时发布；新旧硬件平滑共存；双端通道改动成本降低约 60%。</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div class="org">Warranty Plus — 保修延保模块</div>
+          <div class="when">2026.04 — 至今</div>
+        </div>
+        <div class="sub-row">
+          <div class="role">全栈自研 / 架构负责人</div>
+        </div>
+        <div class="meta-line"><b>技术栈：</b>Flutter/Dart · Go(net/http) · MySQL · Snowplow · GrowthBook · Next.js · Prometheus/Grafana · Superset · GitLab CI · ArgoCD</div>
+        <ul class="bullets">
+          <li><b>全栈自研</b>：Go 后端（net/http + Ports &amp; Adapters）+ Flutter Split-API SDK（零依赖接口包 + 实现包）+ Next.js Admin 审核后台，三个 App（KiwiBit / VicoHome / VicoNature）共用。</li>
+          <li>数据库 schema 演进（<b>4 表→2 表</b>）+ 信任边界下沉解耦 iot-service；弱网降级（本地缓存 + 配置热替换）+ 订单号实时校验。</li>
+          <li><b>工程化</b>：自研 Quality Gate（CI 与 pre-commit 同入口）+ <b>52 个 ADR</b> + Doc-Drift Gate + L1–L4 分层测试（含 staging 真实数据 golden dataset）。</li>
+          <li><b>价值：</b>运营首获 Amazon 订单号 ↔ App 账号关联与审核能力；三 App 共用一套 SDK 省约 2/3 重复开发；schema 重构使后端代码减约 800 行、响应体积减约 62%。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 工作技能 -->
+    <section class="section">
+      <div class="section-title">工作技能</div>
+      <div class="card">
+        <div class="skill-group">
+          <h4>移动端开发</h4>
+          <ul class="bullets">
+            <li>熟练掌握 Flutter/Dart，具备跨平台插件（MethodChannel）开发能力，有 Flutter Monorepo / Package 化工程组织经验。</li>
+            <li>熟练使用 Kotlin / Java 进行 Android 开发，熟悉 Jetpack（ViewModel、LiveData、Navigation、Room）及 MVVM 架构。</li>
+            <li>熟悉 iOS Objective-C / Swift 开发，具备 CocoaPods SDK 开发与发布经验。</li>
+          </ul>
+        </div>
+        <div class="skill-group">
+          <h4>通信协议与 IoT</h4>
+          <ul class="bullets">
+            <li>熟悉 Bluetooth BLE 协议，有设备扫描、特征读写、状态机管理的完整开发经验。</li>
+            <li>熟悉 WiFi 配网流程，了解 Matter 协议，有 WebRTC / FRP 专线加速实际开发经验；了解 MQTT 设备端与云端通信。</li>
+          </ul>
+        </div>
+        <div class="skill-group">
+          <h4>架构设计</h4>
+          <ul class="bullets">
+            <li>有跨端（App / Cloud / Device）技术方案设计能力，能输出含兼容矩阵、测试策略的完整方案。</li>
+            <li>熟悉 Ports &amp; Adapters（六边形架构），主导 2 套生产级 SDK 的 Split API 设计；ADR 驱动决策（warranty 52 / provisioning-kit 22）+ 分阶段迁移经验。</li>
+            <li>熟悉常用设计模式（代理、单例、工厂、建造者、观察者、策略），有多次设计模式重构经验。</li>
+          </ul>
+        </div>
+        <div class="skill-group">
+          <h4>AI 辅助开发</h4>
+          <ul class="bullets">
+            <li>熟悉 AI Agent 驱动研发（Harness Engineering）：CLAUDE.md 架构约束 + 自研 quality_gate（10 条规则，CI 与 pre-commit 同入口）+ ADR 驱动 双层框架。</li>
+            <li>掌握 AI-TDD（先红测试再实现）+ golden data；推动 [AI-Generated] commit tag 团队公约，跨 5 仓 203 个 AI 提交可审计、可归因。</li>
+            <li>系统化防 AI 偷懒/漏实现：Doc-Drift Gate + 需求追溯矩阵 + example 编译门控 + 多轮分级 review。</li>
+          </ul>
+        </div>
+        <div class="skill-group">
+          <h4>工程化与质量</h4>
+          <ul class="bullets">
+            <li>熟悉 GitLab CI/CD、Jenkins 自动化构建；有 SonarQube 扫描、GTest / Playwright E2E 测试实践。</li>
+            <li>有 Android Framework 层开发经验（Binder IPC、Handler 机制）及 JNI / HAL 开发经验。</li>
+            <li>能够借助 AI Agent 完成后端与 Web 项目的开发、联调和问题排查，理解接口设计、数据模型、部署与可观测等工程环节。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 教育背景 -->
+    <section class="section">
+      <div class="section-title">教育背景</div>
+      <div class="card edu">
+        <div class="row">
+          <div class="org">山东科技大学　·　软件工程　·　本科</div>
+          <div class="when">2017.09 — 2021.06</div>
+        </div>
+        <div class="course">主修课程：C/C++、Java、数据库、计算机组成原理、数据结构、设计模式、计算机网络、操作系统</div>
+      </div>
+    </section>
+
+  </div>
+</div>
+</body>
+</html>

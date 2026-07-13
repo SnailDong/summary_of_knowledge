@@ -1,0 +1,26 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageBack from '../../components/PageBack.astro';
+---
+
+<BaseLayout title="AI Workflow - Summary of Knowledge">
+  <PageBack />
+  <section class="section-header">
+    <p class="eyebrow">AI Workflow</p>
+    <h1>AI Workflow</h1>
+    <p>这里分成两类：Custom Skills 是你整理出的自定义工作流，Superpowers 是通用研发方法论和配套提示词。</p>
+  </section>
+
+  <div class="article-grid">
+    <a class="article-card" href="/skills/custom/">
+      <span>Custom</span>
+      <strong>Custom Skills</strong>
+      <p>architect、code-review、dev-workflow、story-craftsman 等自定义工作流。</p>
+    </a>
+    <a class="article-card" href="/skills/superpowers/">
+      <span>Superpowers</span>
+      <strong>Superpowers</strong>
+      <p>brainstorming、TDD、systematic debugging、writing plans 等通用方法论。</p>
+    </a>
+  </div>
+</BaseLayout>

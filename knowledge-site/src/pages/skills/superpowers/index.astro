@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ArticleList from '../../../components/ArticleList.astro';
+import PageBack from '../../../components/PageBack.astro';
+import { buildItems } from '../../../lib/content.js';
+
+const modules = import.meta.glob('../../../content/skills/superpowers/**/*.md');
+const items = buildItems(modules, '../../../content/skills/', '/skills', 'Superpowers');
+---
+
+<BaseLayout title="Superpowers - AI Workflow">
+  <PageBack href="/skills/" label="返回 AI Workflow" />
+  <ArticleList
+    title="Superpowers"
+    description="通用研发方法论、工作流和配套提示词。"
+    items={items}
+  />
+</BaseLayout>

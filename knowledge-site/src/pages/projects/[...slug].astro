@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleShell from '../../components/ArticleShell.astro';
+import { normalizeSlug } from '../../lib/content.js';
+
+export async function getStaticPaths() {
+  const modules = import.meta.glob('../../content/projects/**/*.md');
+  return Object.entries(modules).map(([path, loader]) => {
+    const slug = normalizeSlug(path, '../../content/projects/');
+    return { params: { slug }, props: { loader, path } };
+  });
+}
+
+const { loader, path } = Astro.props;
+const article = await loader();
+const title = article.frontmatter?.title || decodeURIComponent(path.split('/').at(-1).replace(/\.md$/, ''));
+const headings = article.getHeadings ? await article.getHeadings() : [];
+const Content = article.Content;
+---
+
+<BaseLayout title={`${title} - 项目经验`}>
+  <ArticleShell title={title} backHref="/projects/" backLabel="返回项目经验" headings={headings}>
+    <Content />
+  </ArticleShell>
+</BaseLayout>

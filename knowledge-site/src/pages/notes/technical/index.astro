@@ -1,0 +1,21 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ArticleList from '../../../components/ArticleList.astro';
+import PageBack from '../../../components/PageBack.astro';
+import { buildItems, isStudyNotePath, omitReadmePath } from '../../../lib/content.js';
+
+const modules = import.meta.glob('../../../content/notes/**/*.md');
+const technicalModules = Object.fromEntries(
+  Object.entries(modules).filter(([path]) => omitReadmePath(path) && !isStudyNotePath(path))
+);
+const items = buildItems(technicalModules, '../../../content/notes/', '/notes', '技术笔记');
+---
+
+<BaseLayout title="技术笔记列表 - 技术笔记">
+  <PageBack href="/notes/" label="返回技术笔记" />
+  <ArticleList
+    title="技术笔记"
+    description="Java、Android Framework、性能优化、开源库、网络数据库等主题笔记。"
+    items={items}
+  />
+</BaseLayout>

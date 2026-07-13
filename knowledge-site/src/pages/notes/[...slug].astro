@@ -1,0 +1,28 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleShell from '../../components/ArticleShell.astro';
+import { isStudyNotePath, normalizeSlug } from '../../lib/content.js';
+
+export async function getStaticPaths() {
+  const modules = import.meta.glob('../../content/notes/**/*.md');
+  return Object.entries(modules).map(([path, loader]) => {
+    const slug = normalizeSlug(path, '../../content/notes/');
+    return { params: { slug }, props: { loader, path } };
+  });
+}
+
+const { loader, path } = Astro.props;
+const article = await loader();
+const title = article.frontmatter?.title || decodeURIComponent(path.split('/').at(-1).replace(/\.md$/, ''));
+const headings = article.getHeadings ? await article.getHeadings() : [];
+const isStudyNote = isStudyNotePath(path);
+const backHref = isStudyNote ? '/notes/study/' : '/notes/technical/';
+const backLabel = isStudyNote ? '返回学习笔记' : '返回技术笔记';
+const Content = article.Content;
+---
+
+<BaseLayout title={`${title} - 技术笔记`}>
+  <ArticleShell title={title} backHref={backHref} backLabel={backLabel} headings={headings}>
+    <Content />
+  </ArticleShell>
+</BaseLayout>

@@ -1,0 +1,1232 @@
+# 面试对答手册（四）- 当前简历项目递进版
+
+> 基于当前 `resume-paged-structured.html` 整理。组织方式从“简历逐项罗列”调整为“面试推进路径”：先建立自我定位，再从三个项目出发，由业务目标逐步深入到架构、技术名词、质量保障、收益证明和压力追问。
+>
+> 口径原则：主线是 Android / Flutter / 跨端 SDK / IoT 设备链路 / AI 辅助工程化。后端和 Web 统一表达为“AI 辅助实现，本人负责方案设计、接口边界、数据模型、联调验收、可观测和质量治理”，不要包装成长期专职 Go 或 Next.js 后端专家。
+
+---
+
+## 0. 使用方式
+
+### 面试回答顺序
+
+1. 先讲定位：Android 开发工程师，强项是移动端业务、跨端 SDK、IoT 设备链路和 AI 辅助工程化。
+2. 再讲三个项目：Warranty Plus、Provisioning Kit、Homebase。
+3. 每个项目都按“业务目标 -> 我的角色 -> 方案设计 -> 技术难点 -> 收益指标 -> 风险控制”展开。
+4. 被追问名词时，不孤立解释概念，要回到项目场景。
+5. 被追问后端和 AI 时，要主动划清边界：我能设计和验收工程闭环，但不把自己包装成传统资深后端。
+
+### 三个主项目一句话
+
+- **Warranty Plus**：用 AI 辅助全栈方式，一个月完成 App / SDK / Go 服务 / MySQL / Next.js 审核后台 / 埋点看板的保修延保闭环。
+- **Provisioning Kit**：把分散在多个 App 中的设备配网能力 SDK 化，用 Split API + 宿主 Adapter 沉淀 30+ 配网页面和通用链路。
+- **Homebase**：作为移动端业务负责人，协调 Android / iOS / Flutter / iOS Core SDK 4 仓，支撑 HB1 新型号发布、上架和量产售卖。
+
+### 真实实现依据
+
+这份问答按真实项目实现校准，回答时优先引用下面这些证据，不要只讲抽象概念：
+
+- **Warranty Plus**：`project/vico/customer-care/internal/warranty` 的 Go 后端模块、`admin/src/app/admin/warranty` 的 Next.js 后台、`admin/src/app/api/warranty/admin/[...path]/route.ts` 的 Admin 代理、`internal/warranty/handler/metrics.go` 的 Prometheus 指标，以及 `feature/warranty_SDK` 分支上的 warranty / observability / admin 提交。
+- **Provisioning Kit**：`project/vico/provisioning-kit` 的 `flutter_provisioning_api` / `flutter_provisioning_feature` 两包、`ProvisioningHostBridge` / `ProvisioningTracker` / `ProvisioningL10n` / `ProvisioningTheme` / `HubLoader` 等宿主契约、`MethodChannelProvisioningCorePortAdapter`、HomeBase 子设备搜索与换网迁移提交。
+- **Homebase**：`project/vico/g0-android` 中 `RemoveHubDeviceActivity`、`DeviceHelper.supportsNewFirmwareFeatures`、`SwitchNetworkManager`、`online_switch_network_design.md`、相机绑 Hub 设备卡片提交、子设备绑定 Hub 埋点提交，以及固件门控和 BLE fallback 相关测试提交。
+
+---
+
+## 1. 开场定位：先让面试官知道你是谁
+
+### Q1：请你用 1 分钟介绍一下自己。
+
+**回答：**
+我有 4 年 Android / 移动端开发经验，早期在车载互联场景做 Android 应用、互联服务 SDK、Framework 层 TBoxService，也参与过量产项目和多设备互联策略设计。后来在智能家居方向，更多负责 Flutter / Android / iOS / Native SDK 协同的设备绑定、配网和售后保修业务。
+
+最近一段经历里，我主要做三类事情：第一是 Warranty Plus 保修延保模块，负责移动端到后端、后台、可观测的业务闭环；第二是 Provisioning Kit 配网 SDK，把多 App 重复的配网流程抽成可复用能力；第三是 Homebase 新型号功能，协调 Android、iOS、Flutter、iOS Core SDK 4 仓锁步落地。我的特点是能把复杂移动端业务拆成稳定接口、可复用 SDK 和可验证的工程流程，同时会用 AI Agent 提升交付效率，但会用 ADR、quality gate、golden data、review 和看板来约束质量。
+
+### Q2：你简历标题是 Android 开发工程师，为什么项目里有 Flutter、iOS、Go 和 Next.js？
+
+**回答：**
+我的基本盘还是 Android 和移动端，但现在的移动端业务往往不是单一 Android 页面。比如设备绑定涉及 Flutter 页面、Android/iOS Native 能力、iOS Core SDK、BLE/WiFi/Matter、后端接口、运营后台和埋点监控。
+
+所以我在项目中的定位不是“什么都手写到专家级”，而是移动端业务负责人或架构负责人：我负责把端、云、设备、后台之间的接口、状态和验收边界设计清楚。后端和 Web 的实现可以借助 AI Agent，但接口设计、数据模型、联调验收、质量门禁和发布风险由我负责。
+
+### Q3：你的核心优势是什么？
+
+**回答：**
+第一是移动端复杂链路拆解能力。设备绑定、配网、换网、保修延保都不是单页面功能，背后有权限、固件、Native 通道、后端状态、埋点和多 App 复用，我能把它们拆成可维护的边界。
+
+第二是 SDK 化和跨端协同能力。Provisioning Kit 和 Warranty Plus 都体现了这个特点：稳定 API、实现包、宿主 Adapter、MethodChannel、可观测和测试闭环。
+
+第三是 AI 辅助工程化能力。我不是让 AI 随便写代码，而是把 AI 放在明确边界内，用 ADR、CLAUDE.md、quality_gate、golden data、Doc-Drift Gate 和 review 约束它。
+
+### Q4：如果只能让面试官记住一个标签，是什么？
+
+**回答：**
+“能把复杂移动端业务做成可复用、可观测、可演进的 SDK 或业务闭环的人”。我不是只做单点页面，而是能处理 App、Native、设备、云端、后台和工程流程之间的边界。
+
+### Q5：你的后端能力真实边界是什么？
+
+**回答：**
+我能做后端接口设计、数据模型设计、分层边界、联调、测试、部署理解和可观测性设计，也能借助 AI Agent 完成 Go / Next.js 项目的开发和排查。
+
+但我不会把自己包装成长期专职 Go 后端专家。复杂分布式治理、高并发中间件调优、Go runtime 内核不是我的主场。我的强项是把后端作为移动端业务闭环的一部分，设计清楚接口、状态、权限、数据和验收标准。
+
+### Q6：你如何解释“AI 辅助工程化”？
+
+**回答：**
+AI 辅助工程化不是“用 AI 写代码”这么简单，而是把 AI 放进一个可控流程里。流程一般是：先明确需求和验收标准，再写设计或 ADR，再拆任务，让 AI 按边界实现，最后用测试、golden data、review、可观测和文档漂移检查来验收。
+
+我的价值不是替 AI 背书，而是让 AI 的产物可审计、可验证、可回滚。尤其在后端和 Web 这种不是我传统主战场的方向，必须更强调接口契约、数据模型、权限边界和质量门禁。
+
+### Q7：你说“架构负责人”是不是带团队？
+
+**回答：**
+我这里的负责人更多是技术负责人，不是行政管理负责人。我负责技术方案、架构边界、跨仓协同、review、联调验收和交付质量。
+
+如果面试官问带人管理，我会如实说我更多是技术牵头和协同推进。比如 Homebase 里我负责移动端业务拆解和 4 仓协同，Warranty 里我负责方案、接口、数据和交付闭环，Provisioning 里我负责 SDK 架构边界。
+
+---
+
+## 2. 工作经历总览：从职责引出项目
+
+### Q8：你在北京市积加科技有限公司主要负责什么？
+
+**回答：**
+我负责 Vico Smart Home、KiwiBit、VicoHome、VicoNature、SafeMo 等消费端相关研发，聚焦设备绑定、Homebase 新型号和售后保修业务线。
+
+具体落地包括：Warranty Plus 保修 SDK 和审核后台闭环、Provisioning Kit 配网 SDK、Homebase 新型号功能，以及 Android / iOS / Flutter / iOS Core SDK 4 仓锁步演进。同时也参与内部工具基础建设，把研发提效、问题排查和协作支持能力沉淀下来。
+
+### Q9：工作经历里写“内部工具基础建设”，具体是什么？
+
+**回答：**
+它不是面向用户的业务功能，而是面向研发过程的基础工具或规范。比如把常见的构建、排查、配置、文档、检查项和协作流程沉淀成可复用能力，让后续项目不用每次从零开始。
+
+这个经历和 AI 辅助工程化有关。跨端项目经常遇到契约不一致、文档不同步、测试漏场景、排查没有上下文的问题。内部工具和流程可以把这些检查前置，降低沟通成本、排查成本和重复劳动。
+
+### Q10：你在德赛西威主要做什么？
+
+**回答：**
+主要做车载互联应用和平台互联服务，包括需求分析、DD/RD 文档、Android 应用开发、互联服务 SDK 和 Framework 层 TBoxService。
+
+项目上支撑过奇瑞、保时捷、小鹏等量产项目，也维护过平台共版代码和旧平台重构，还参与过多设备互联连接管理策略设计和专利申请。
+
+### Q11：车载经历和现在智能家居经历有什么共同点？
+
+**回答：**
+共同点是都不是纯 App 页面，都是软硬结合。车载场景要考虑车机系统、TBox、Framework、生命周期、量产验证；智能家居要考虑 BLE/WiFi/Matter、固件版本、设备在线离线、云端接口和 App 生命周期。
+
+这两段经历都让我更关注“状态、连接、异常恢复和发布风险”，而不是只关注 UI 展示。
+
+---
+
+## 3. Warranty Plus：从真实实现讲业务闭环和 AI 辅助全栈交付
+
+### Q12：Warranty Plus 是什么项目？
+
+**回答：**
+Warranty Plus 是保修延保模块，业务目标是打通用户保修申请、设备信息、Amazon 订单号、App 账号与运营审核流程，补齐售后保修业务闭环。
+
+真实实现里，它不是单纯的表单页。`customer-care/internal/warranty` 负责 Go 后端业务，`admin/src/app/admin/warranty` 负责 Next.js 运营后台，SDK/App 侧负责入口、设备信息获取、订单填写、弱网与配置兜底，Snowplow / Prometheus / Grafana 负责上线后的链路观测。
+
+### Q13：你在 Warranty Plus 里的角色是什么？
+
+**回答：**
+我的角色是架构负责人 / AI 辅助全栈交付。具体来说，我负责把 App/SDK、Go 服务、MySQL、Next.js Admin、埋点和看板拆成清晰边界，并推动一个月内交付完整闭环。
+
+实现上后端和 Web 有 AI Agent 辅助，但我负责方案设计、接口验收、数据模型、状态机、核心 review、联调和可观测性。这个口径要讲清楚：我不是把自己包装成资深 Go 后端，而是把 AI 产物放进可验证的工程闭环里。
+
+### Q14：这个项目最大的挑战是什么？
+
+**回答：**
+最大的挑战是全栈链路都要自己兜住：App/SDK 负责用户入口和设备信息，Go 后端负责登记、状态机和审核接口，MySQL 承载登记数据，Next.js Admin 给运营处理申请，埋点和 Grafana 监控线上健康度。
+
+真实难点不在“写 CRUD”，而在边界和风险：重复 SN、跨 tenant 数据隔离、已审核记录不可随意覆盖、skip baseline 不能被运营误审核、批量审核要有事务语义、Admin 删除要有权限和确认、防止 PII 暴露，还要能通过指标在客诉前发现小问题。
+
+### Q15：为什么要做 Flutter Split-API SDK？
+
+**回答：**
+因为 Warranty 不只给一个 App 用。多个 App 的入口、主题、配置、埋点和宿主能力不同，但保修申请、设备信息、订单号、状态回查这些核心流程应该复用。
+
+Split-API 的作用是把稳定契约和值对象拆出来，把 UI、缓存、网络、埋点和宿主桥接放在实现层。这样新 App 接入时主要做宿主配置和入口适配，不需要再复制一套保修流程。
+
+### Q16：Warranty Plus 的数据模型怎么设计？
+
+**回答：**
+真实落地里，核心表以 `warranty_registration` 和 `warranty_channel` 为主。`warranty_registration` 是设备保修登记的事实表，包含 tenant、user、serial_number、order_no、channel_id、registered_at、expires_at、review_status、reviewed_at、reviewed_by、reject_reason、first_source、email、device_name、sku 等字段；`warranty_channel` 维护渠道配置和订单号校验规则。
+
+我会重点讲状态机：`pending / approved / rejected`。SDK 提交后进入待审核；运营通过后进入 approved；拒绝后保留原因并允许按规则重新提交。代码里还有几个关键保护：`ErrApprovedRowLocked` 防止 approved 行被重提覆盖，`ErrCrossTenantRow` 防止跨租户写入，`ErrSkipChannelNotBulkReviewable` 防止把 SDK lazy-create 的 `skip` baseline 当成真实订单批量审核。
+
+注意口径：面试不要把早期表结构讨论讲成项目收益。更稳妥的说法是：当前落地模型收敛到 registration + channel，围绕设备登记事实、渠道校验和审核状态组织。
+
+### Q17：为什么要有 Next.js Admin？
+
+**回答：**
+Next.js Admin 是运营审核后台，真实页面在 `admin/src/app/admin/warranty` 下。它不是简单列表，而是围绕运营处理效率做了列表、搜索筛选、订单分组、批量审核、详情页、CSV 导出、渠道管理、手动登记和数据概览。
+
+比如 `RegistrationTable` 会按 `(channel_id, order_no)` 分组，`BulkActionBar` 支持同一订单下多设备批量通过/拒绝，详情页支持单条审核和删除确认，Overview 里有 pending、approved、本月 approved、未登记设备等运营视角指标。它的价值是把“用户提交申请”变成“运营可处理、可追踪、可导出、可恢复”的闭环。
+
+### Q18：弱网缓存有什么价值？
+
+**回答：**
+售后保修入口和提交链路不能因为短暂网络问题直接不可用。弱网缓存可以缓存配置、渠道信息或用户输入，让用户在网络波动时仍有可恢复体验。
+
+但缓存不能让用户提交过期或错误数据，所以要有版本、过期策略、失败回退和明确提示。
+
+### Q19：配置热替换有什么价值？
+
+**回答：**
+保修业务可能涉及入口开关、渠道、文案、实验和审核策略。如果每次调整都发 App 版本，效率太低。
+
+配置热替换可以让后端或配置平台控制入口、策略和文案。但它也有风险，所以 App 侧必须有默认值、缓存、配置校验和兜底，避免配置异常导致主流程不可用。
+
+### Q20：Warranty Plus 为什么强调 1 个月完成交付？
+
+**回答：**
+因为这是 App / SDK / Go / MySQL / Next.js Admin / 埋点 / Grafana 的全链路交付，不是单页面功能。一个月内交付说明我能把 AI Agent 变成可控生产力，而不是只让 AI 写散代码。
+
+回答时要强调：AI 提升实现效率，但需求拆解、接口契约、状态机、测试、review、联调验收和上线观测由我负责。实际提交里大量 warranty/admin/api/observability 提交带有 AI 生成痕迹，这也正好证明我的角色是“AI 辅助交付的工程负责人”。
+
+### Q21：上线后 0 事故怎么讲才可信？
+
+**回答：**
+0 事故不是说没有任何小问题，而是没有造成主流程中断、错误审核、数据不可用或大面积用户影响。
+
+这个结果来自几个控制点：后端有状态机和租户隔离保护，Admin 有审核和批量操作保护，SDK 有配置和弱网兜底，Prometheus/Grafana 有 HTTP、注册结果、订单校验、重复 SN、Admin 审核、pending gauge 等指标。如果有小问题，也能通过看板在客诉前快速发现和处理。
+
+### Q22：通过看板在客诉前解决小问题是什么意思？
+
+**回答：**
+意思是我们不是等用户投诉才知道问题，而是通过埋点、Prometheus 和 Grafana 观察关键链路。代码里有 `warranty_http_requests_total`、`warranty_http_request_duration_seconds`、`warranty_registration_total`、`warranty_register_duplicate_sn_total`、`warranty_config_fetch_total`、`warranty_order_validation_total`，Admin 还有审核动作、pending backlog、批量匹配、删除、渠道变更、PII mask/resolve 等指标。
+
+SDK 侧也有生命周期和页面打开事件，比如 session_id、guide page_opened、skip dialog 等。这样当某个 App、版本、渠道、接口、审核状态或错误码异常升高时，可以先看到趋势，再定位是 SDK、配置、接口、Admin 操作还是数据问题。
+
+### Q23：SDK 健康度、使用状况、问题监测分别看什么？
+
+**回答：**
+SDK 健康度看 SDK 是否能正常完成链路，比如入口曝光、配置拉取、页面打开、session 开始/结束、提交成功率、接口错误率、异常退出和页面停留阶段。
+
+使用状况看用户和运营是否真的在用，比如入口点击、申请提交量、不同 App/版本/渠道分布、Admin 待审核数量、通过/拒绝数量、CSV 导出和手动登记使用情况。
+
+问题监测看失败原因和风险边界，比如接口 5xx、请求耗时、订单校验失败、重复 SN、跨 tenant 拦截、approved 行重提、skip 行误操作、pending 积压、PII 查询失败。三者合起来，才能判断功能是否健康地被使用。
+
+### Q24：Snowplow 和 Grafana 分别代表什么？
+
+**回答：**
+Snowplow 更偏用户行为和业务事件埋点，比如入口曝光、按钮点击、提交流程、失败原因、功能使用分布。
+
+Grafana 更偏看板和监控展示，可以把关键指标可视化，帮助研发和运营观察趋势、定位异常。简单理解：Snowplow 负责采集业务事件，Grafana 负责把关键指标展示出来。
+
+### Q25：GrowthBook 在这个项目里做什么？
+
+**回答：**
+如果面试官追问 GrowthBook，我会保守回答：它通常用于 feature flag 或实验控制，在这类跨 App 功能里可以用来控制入口开关、灰度范围或策略开关。
+
+我不会把它讲成 Warranty 的核心技术点。核心仍然是 SDK、后端、Admin 和可观测闭环；GrowthBook 只表示我理解灰度和配置开关在发布风险控制里的位置。App 侧必须有默认值和兜底，不能因为配置平台异常导致主流程不可用。
+
+### Q26：ArgoCD 怎么讲？
+
+**回答：**
+我不会把自己包装成专职 DevOps。ArgoCD 在这里表示我理解 GitOps 部署链路：服务或配置通过 Git 作为声明式来源，由 ArgoCD 同步到环境。
+
+我的关注点是部署闭环和验收：代码合入后怎么构建、部署、健康检查、回滚，以及配置和数据库变更是否兼容。面试时不要深讲 K8s 运维细节，除非岗位明确需要。
+
+### Q27：多 App 复用为什么能节省约 2/3 成本？
+
+**回答：**
+如果三个 App 各自做保修能力，就会重复做入口、设备信息读取、订单填写、SDK 状态、Go 接口、Admin 审核、埋点和看板。共用一套 SDK、服务和后台后，差异主要集中在宿主入口、主题、配置、埋点接入和少量适配，核心流程只维护一套。
+
+所以“节省约 2/3”是按三个 App 避免重复建设估算的工程量，不是精确财务数字。
+
+### Q28：如果面试官质疑“你不是后端，怎么保证 Go 服务质量”？
+
+**回答：**
+我会承认我不是长期专职 Go 后端，但我负责的是工程闭环。具体做法是先定义接口契约、数据模型、状态机、权限边界和测试要求，再让 AI Agent 或实现者按边界开发。
+
+实现后要做接口验收、数据一致性检查、错误码检查、可观测性检查和 review。AI 可以写代码，但不能决定业务边界和验收标准。
+
+---
+
+## 4. Provisioning Kit：从真实 SDK 拆包讲复用收益
+
+### Q29：Provisioning Kit 是什么项目？
+
+**回答：**
+Provisioning Kit 是设备绑定 / 配网 SDK 架构迁移项目。真实仓库是 `project/vico/provisioning-kit`，不是只有计划文档，里面已经拆成 `flutter_provisioning_api` 和 `flutter_provisioning_feature` 两个包。
+
+它的目标是把设备发现、BLE/WiFi 配网、二维码路径、HomeBase 子设备绑定、换网、错误页、成功页、安装向导、文案、主题、埋点、Native 桥接沉淀成可复用 SDK，而不是让每个 App 复制 `lib/pages/bind/*`。
+
+### Q30：你在 Provisioning Kit 里的角色是什么？
+
+**回答：**
+我是架构负责人，负责 SDK 化方案设计、边界拆分和关键实现推进。重点不是“搬代码”，而是把稳定 SDK 能力和宿主能力拆开。
+
+真实实现里，API 包提供模型和接口，比如 `ProvisioningKitConfig`、`ProvisioningHostBridge`、`ProvisioningTracker`、`ProvisioningL10n`、`ProvisioningTheme`、`ProvisioningHttpClient`、`HubLoader`、`ProvisioningCorePort`；feature 包负责页面、流程编排、服务实现、MethodChannel adapter、Fake 和测试。
+
+### Q31：为什么这个项目要 SDK 化？
+
+**回答：**
+因为设备配网不是某一个 App 的一次性功能，而是多个 App 长期复用的核心能力。如果每个 App 复制一套 BLE/WiFi/Matter、权限、导航、埋点和页面逻辑，接入成本高，修复问题也难同步。
+
+真实迁移范围里包含 30+ 页面和多条流程：Camera 主流程、Hub/HomeBase、AP Direct、4G/SIM、QR、子设备搜索、post-bind 设置向导、换网等。SDK 化后，新 App 或新设备接入主要处理宿主 Adapter、主题文案和业务配置，核心流程、错误处理、Native 通道和业务适配层可以复用。
+
+### Q32：Split API 是什么？
+
+**回答：**
+Split API 是把稳定接口和值对象放在 API 包，把具体业务实现放在实现包。API 包尽量零运行时依赖，避免把 UI、网络库、埋点、Native plugin 依赖传染给所有消费方。
+
+在 Provisioning Kit 里，`flutter_provisioning_api` 放契约和模型，`flutter_provisioning_feature` 放页面、服务、adapter 和测试。这样宿主可以依赖 API 层完成编译期契约对齐，也可以按需接入 feature 的完整 SDK UI。
+
+### Q33：Ports & Adapters 和普通接口抽象有什么区别？
+
+**回答：**
+普通接口抽象可能只是为了 mock。Ports & Adapters 更强调架构边界：核心业务定义 Port，外部基础设施通过 Adapter 接入。
+
+真实代码里的例子是：SDK 不直接 import g0-flutter 的网络、FlutterBoost、Snowplow、Crowdin 或主题，而是通过 `ProvisioningHttpClient`、`ProvisioningHostBridge`、`ProvisioningTracker`、`ProvisioningL10n`、`ProvisioningTheme`、`HubLoader` 等 Port 由宿主注入。这样 SDK 能在 example/Fake 环境跑测试，也能在 g0/Lattice 这类宿主里用不同 Adapter 接入。
+
+### Q34：宿主 Adapter 是什么？
+
+**回答：**
+宿主 Adapter 是 App 侧把自己的能力适配给 SDK 的桥。SDK 需要发 HTTP、申请权限、跳转页面、上报埋点、拿账号态，但不同 App 的实现不同。
+
+所以 SDK 定义“我需要什么能力”，宿主 Adapter 负责“这个 App 里怎么实现”。这样 SDK 不被某一个 App 的框架污染。
+
+### Q35：为什么要支持 SDK UI / 自定义 UI 两种模式？
+
+**回答：**
+SDK UI 模式是接入方直接使用 SDK 提供的页面和流程，接入最快，适合 UI 差异不大的 App。
+
+自定义 UI 模式是接入方自己画页面，但复用 SDK 的流程编排、状态机、Native 通道和业务适配层，适合品牌或交互差异大的 App。
+
+结合真实实现讲：仓库已经把 g0 原有配网页面逐步 1:1 还原到 SDK，包括资源、l10n、theme、路由、Fake 测试和 HomeBase 子设备页。如果新 App 沿用 SDK UI，接入工作量主要在宿主 Adapter 和配置，预计降低 70%-80%；如果新 App 要换自己的 UI，也能复用 API 包、服务、状态机、Native adapter、HubLoader、换网和错误码模型，预计减少 50%-60%。
+
+### Q36：MethodChannel 在 Provisioning Kit 中解决什么？
+
+**回答：**
+MethodChannel 是 Flutter 和 Native 之间的通信桥。配网链路里很多能力在 Native 层，比如 BLE 扫描、WiFi 信息、设备发现、绑定结果回调。
+
+真实实现里有 `MethodChannelProvisioningCorePortAdapter`，并且 v3 从早期 FFI/Bootstrap 方案调整为 Android `com.addx.provisioning:provisioning-android` AAR + session API + MethodChannel/EventChannel。Flutter 侧面向 `ProvisioningCorePort` 的 `createSession / prepare / fetchWifiList / commitBind / disposeSession / startProvision / stopProvision / stageEventsFor / logs` 这类契约，不直接关心 Android 内部怎么和底层 SDK 交互。
+
+### Q37：AAR 是什么，为什么会用 AAR？
+
+**回答：**
+AAR 是 Android Library 的打包格式，里面可以包含 Kotlin/Java 代码、资源、Manifest 和 native 相关内容。
+
+Provisioning Kit 使用 AAR，是为了把底层 Android native 配网能力作为稳定制品交付给 Flutter plugin 或宿主，而不是每个 App 各自复制底层实现。真实提交里有 provisioning-android 从 1.0.17 升到 1.0.27，用于打通 camera -> HomeBase 子设备绑定，说明 AAR 不是名词装饰，而是底层能力发布和回归的载体。
+
+### Q38：melos 是什么？
+
+**回答：**
+melos 是 Flutter/Dart monorepo 管理工具，用来管理多个 package 的依赖、脚本、测试和版本。不过当前真实仓库 README 更强调 Dart Workspace，两包结构是 `flutter_provisioning_api` + `flutter_provisioning_feature`。
+
+面试时可以说：我理解这类多包工程需要 workspace/monorepo 管理，核心是 API 包、feature 包、example/Fake 和测试能一起联调；不需要把自己包装成 melos 专家。
+
+### Q39：BLE、WiFi、Matter 在配网里分别承担什么？
+
+**回答：**
+BLE 常用于近场发现、建立临时连接、传输 WiFi 信息或设备初始化。WiFi 是设备最终联网的主要通道，用户选择网络、输入密码、设备连接路由器都属于这个链路。Matter 是智能家居设备互联协议，涉及更标准化的设备发现、配网和生态兼容。
+
+绑定 SDK 的难点是这些协议不是孤立的，用户权限、设备固件、App 状态、云端注册都要一起编排。
+
+### Q40：追踪成功率、失败原因、耗时分布有什么价值？
+
+**回答：**
+设备绑定失败原因很多：权限、蓝牙、WiFi、Matter、固件、云端、用户取消、网络波动。只看最终失败率无法定位问题。
+
+按 App、型号、固件、配网阶段、错误码追踪成功率、失败原因和耗时分布，就能看出问题集中在哪类设备、哪个固件、哪个流程阶段。Provisioning Kit 里有 `ProvisioningTracker`、`stage_report`、`BindProgressEvent`、错误码模型和 session 概念，这些都是为了让配网不再是黑盒。
+
+### Q41：如何证明 Provisioning Kit 有实际收益？
+
+**回答：**
+第一，真实仓库已经沉淀 API/feature 两包、宿主契约、Fake、测试和大量页面迁移，不是停留在方案。第二，HomeBase 子设备搜索、hub_select、camera->HomeBase bleThread、换网 flow 都已经有提交和测试。第三，l10n/theme/HostBridge/Tracker 都外置，说明它不是被某个 App 污染的代码搬家。
+
+收益可以按两类讲：沿用 SDK UI 时接入工作量预计降低 70%-80%；自定义 UI 时核心能力复用，接入工作量预计减少 50%-60%。
+
+### Q42：如果新 App 要接入 Provisioning Kit，你会怎么推进？
+
+**回答：**
+我会先确认宿主能力：HTTP、导航、埋点、主题/i18n、错误上报、feature flag、HubLoader、账号态和 Native artifact 是否可用。
+
+然后跑通 example/Fake 最小闭环，再实现宿主 Adapter，最后验证主路径和关键异常：权限拒绝、蓝牙未开、WiFi 列表失败、绑定超时、设备发现 enrich 失败、Hub 子设备超限、固件不支持、用户取消、换网失败等。
+
+### Q43：Provisioning Kit 最大风险是什么？
+
+**回答：**
+最大风险是“伪 SDK 化”。如果只是把代码搬到一个目录，但仍然依赖宿主网络、导航、埋点和账号态，那还是不能复用。
+
+所以重点是识别稳定能力和宿主能力，用 Port/Adapter 隔离，并通过 example/Fake、L1/L2/L3 测试、真实设备验证和文档/ADR 保证新 App 接入不走偏。真实仓库里的 l10n/theme/HostBridge/Tracker 抽象，就是为了防止伪 SDK 化。
+
+---
+
+## 5. Homebase：从 g0-android 真实提交讲新硬件量产
+
+### Q44：Homebase 新型号项目是什么？
+
+**回答：**
+Homebase 是新中枢硬件，绑定模型从“相机直接绑定到 App/云”变成“相机绑定到 Hub”的 1 对 N 拓扑。App 侧要支持相机绑 Hub、设备卡片、固件校验、在线/离线换网、解绑保留配对等核心售卖功能。
+
+我的角色是移动端业务负责人，负责把需求拆成 Android、iOS、Flutter、iOS Core SDK 都能一致落地的方案，并推进 4 仓锁步演进。真实 Android 侧提交包括相机绑 Hub 卡片展示、子设备绑定 Hub 埋点、在线/离线换网、`RemoveHubDeviceActivity`、固件门控和 BLE fallback 测试。
+
+### Q45：移动端业务负责人是什么意思？
+
+**回答：**
+不是行政管理负责人，而是移动端侧的业务技术负责人。我的职责是把产品需求转成多端可落地的一致方案。
+
+具体包括拆解相机绑 Hub、设备卡片、固件校验、在线/离线换网、解绑保留配对等能力；确认 Flutter 与 Native 的通道契约；协调 Android、iOS、Flutter、iOS Core SDK 的实现节奏；跟进联调、异常链路和发布风险。
+
+### Q46：为什么这个项目要 4 仓锁步？
+
+**回答：**
+因为 Flutter 上层页面要调用 Android/iOS Native 能力，iOS 又涉及 iOS Core SDK，任意一个仓没跟上都会导致某端不可用。
+
+比如换网、解绑保留配对、相机绑 Hub 都涉及 Flutter 页面、Android/iOS Native 能力、底层 SDK 和固件支持。如果 Flutter 新增参数，Android 实现了但 iOS 没实现，或者固件不支持但 App 暴露入口，就会出现双端行为不一致或量产风险。所以必须先定义契约，再四仓按同一节奏实现、联调和合入。
+
+### Q47：相机绑 Hub 是什么？
+
+**回答：**
+传统绑定可能是相机直接绑定到用户账号或 App。Homebase 模型里，Hub 是中枢，相机作为子设备绑定到 Hub，形成一个 Hub 管多台相机的拓扑。
+
+真实提交里有 `feat(bind): 完善camera卡片页面绑定hub逻辑`、`完善camera卡片页面绑定hub时设备卡片显示`、`添加子设备绑定Hub的开始埋点`。App 侧要处理的不只是新增入口，还包括选择 Hub、校验 Hub 和相机能力、绑定结果展示、设备卡片父子关系展示，以及后续解绑或换网。
+
+### Q48：设备卡片有什么技术点？
+
+**回答：**
+设备卡片表面是 UI，但背后体现设备模型变化。相机从独立设备变成 Hub 下的子设备后，卡片要表达父子关系、在线状态、固件能力、入口能力和异常状态。
+
+g0-android 里 `ThemeDeviceSettingsHolder` 这类位置会根据 Hub / Camera、父子关系、在线状态显示不同入口，比如相机端显示 paired to Hub，Hub 端显示已连接设备列表。风险是新旧设备混展示、能力入口误展示、固件不支持却展示新功能，所以设备卡片的重点是基于设备类型、父子关系、固件版本和能力开关控制功能暴露。
+
+### Q49：Permission Guard 解决什么？
+
+**回答：**
+Permission Guard 解决系统能力前置条件。比如蓝牙未开启、权限未授权、系统能力不可用，对用户来说是不同的引导路径。
+
+结合真实项目，不要只背这个词。可以说：在 Homebase/配网链路里，权限、蓝牙、固件、设备在线状态都会决定能否继续。我要做的是把这些状态前置判断，而不是让用户进入绑定或换网后才失败。比如换网里有 BLE fallback 和 30s 超时分支，固件门控里有新旧固件回退路径，这些本质上都是 Guard。
+
+### Q50：SingleTask 解决什么？
+
+**回答：**
+设备绑定和解绑流程很长，可能经历扫码、选择 Hub、权限检查、固件校验、BLE 连接、云端绑定、结果页等。如果多个路径共用混乱返回栈，重复点击、页面回退和异步回调都可能导致流程错乱。
+
+真实落点可以讲 `RemoveHubDeviceActivity`：解绑保留配对不是塞进旧弹窗，而是新增独立 Activity、注册路由、从 `DeviceHelper` 对 HUB + subDevices + 新固件分流过去。这样可以隔离解绑任务状态，减少旧 Dialog 分支、页面回退和异步回调造成的流程混乱。
+
+### Q51：固件版本门控为什么重要？
+
+**回答：**
+App 发版和固件升级不是完全同步的。用户可能拿新 App 连接旧固件，也可能旧 App 遇到新设备。
+
+真实提交里先做了 `firmwareId > 1.0.0` 的新功能门控，后来根据生产版本修正为 `>= 1.0.0`，因为生产 HUB 的 `1.0.0-d` 经过版本比较等同 `1.0.0`。这个例子很好讲：固件门控不是随便写个 if，而是要结合生产固件版本、debug 后缀、回退路径和单元测试。
+
+它保护两个核心功能：新固件走 Flutter 在线换网和 `RemoveHubDeviceActivity`；旧固件保留原来的重新绑定或旧 Dialog 路径，避免向旧固件下发不认识的新协议。
+
+### Q52：在线/离线换网为什么要区分？
+
+**回答：**
+在线设备可以通过云端或信令触发换网；离线设备没有云端连接，只能通过 BLE 近场能力扫描 WiFi 并重新配置。
+
+真实实现里有 `SwitchNetworkManager` 和 `online_switch_network_design.md`：在线换网通过信令/WebSocket 建链，涉及 `SignalConnection`、AUTH、response method、release 和 pending 回调；离线换网走 BLE 近场逻辑。后来还有一个修复提交：复用已 authed 的 `SignalConnection`，否则二次 setup 等不到 AUTH_RESPONSE，Flutter 会 30s+ 静默；同时修复 BLE 30s 超时分支没有停止扫描的问题。
+
+所以在线/离线不是概念区分，而是底层连接方式、超时策略、资源释放和用户引导都不同。
+
+### Q53：解绑保留配对是什么？
+
+**回答：**
+用户解绑 Hub 或相机时，有些场景希望清空所有本地存储和配对信息，有些场景希望保留相机与 Hub 的配对关系，方便后续重新添加或迁移。
+
+真实 Android 侧落点是 `RemoveHubDeviceActivity` 和 `DeviceHelper.showUnbindDialogAndExcDeleteIfNeed` 的分流：HUB + subDevices + 新固件进入新页面，其他情况保留原逻辑。页面里会表达是否保留 camera-central hub pairing，以及 cleanStorage 等操作意图。难点是保证新旧固件兼容，避免旧固件误处理新参数。
+
+### Q54：这个项目的收益怎么讲？
+
+**回答：**
+收益不是“做了几个页面”，而是支撑 HB1 新型号按期完成 App 侧功能闭环、发布上架与量产售卖。
+
+它保障相机绑 Hub、设备卡片、在线/离线换网、解绑保留配对、固件版本门控这些核心售卖功能在新旧固件下可用。真实收益可以这样讲：新固件走新能力，旧固件走回退路径；换网链路修复了二次 setup 和 BLE 超时资源泄漏；解绑保留配对从旧弹窗升级为独立页面和明确状态；设备卡片能表达 Hub/Camera 父子关系。这些都直接降低了量产前发布风险。
+
+### Q55：Homebase 最大风险是什么？
+
+**回答：**
+第一是跨端不一致，Android/iOS/Flutter/iOS Core SDK 任意一端漏改都会影响体验。第二是固件能力差异，新 App 可能遇到旧固件。第三是绑定流程复杂，权限、蓝牙、网络、设备状态都可能异常。
+
+所以我优先做通道契约、固件门控、任务隔离、联调确认、埋点和测试。回答时可以引用真实测试：固件门控有 `DeviceHelperFirmwareGateTest`，解绑分支有 `DeviceHelperUnbindBranchTest`，换网有 switch-network passthrough + BLE fallback 相关测试。
+
+---
+
+## 5.5 代码实现深挖：面试官继续追问时怎么答
+
+### 深挖 Q1：Warranty 的审核并发怎么保证？
+
+**回答：**
+Warranty Admin 的审核不是前端点一下就直接改状态，而是后端状态机控制。`ReviewService.Approve / Reject` 最核心的保护是只允许 `review_status='pending'` 的行被更新，SQL 层会带 tenant_id 和 pending 条件。
+
+这样两个运营同时点审核时，只有第一个请求能把 pending 改成 approved 或 rejected；第二个请求 rowsAffected 为 0，逻辑层会转成 `REVIEW_STATE_LOCKED`。这比前端禁用按钮更可靠，因为真正的并发冲突发生在服务端和数据库层。
+
+### 深挖 Q2：为什么 Warranty 里 `skip` 行不能被审核？
+
+**回答：**
+`skip` 不是用户提交的真实订单渠道，而是 SDK lazy-create baseline，用来表示设备已经进入保修系统但用户还没提交真实订单。它没有真实 order_no，也不代表运营可审核的保修申请。
+
+如果把 `skip` 行批量 approve，会让一个还没提交订单的 baseline 被当成通过审核，后续 SDK 可能误判设备已经延保，用户反而不能正常提交。所以代码里有 `ErrSkipChannelNotBulkReviewable` 和 `ErrSkipRowNotReviewable`，前后端都要把它当成不可审核行。
+
+### 深挖 Q3：Warranty 的 Admin 手动登记为什么要 lookup + create 两步？
+
+**回答：**
+手动登记不是简单插一条数据，因为同一个 SN 可能已经存在不同状态：没有记录、已有 skip baseline、已有 pending/rejected、已经 approved。
+
+所以 `AdminCreateService.Lookup` 先把 SN 分成 `none / upgradable / registered` 三类。`none` 可以新建，`upgradable` 可以在原行上升级，`registered` 说明已经 approved，不能重复登记。这样能避免运营手动登记把用户已有保修记录覆盖掉，也能保留原始 created_at 作为保修期锚点。
+
+### 深挖 Q4：Warranty 为什么要做订单分组和批量审核？
+
+**回答：**
+一个订单号可能对应多个设备 SN，比如用户一次购买多个设备。Admin 如果只按单行审核，运营处理成本高，也容易漏审。
+
+真实 Admin 页面里 `RegistrationTable` 按 `(channel_id, order_no)` 分组，`BulkActionBar` 支持同一订单下 pending 设备批量通过或拒绝。后端 `BulkApproveOrder / BulkRejectOrder` 也按 tenant、channel、order_no 和 pending 状态过滤，保证只影响当前租户、当前订单、当前可审核状态的行。
+
+### 深挖 Q5：Warranty 的可观测性为什么不只看前端埋点？
+
+**回答：**
+前端埋点只能说明用户行为，比如页面打开、按钮点击、提交失败。但保修业务的关键风险还在后端和运营后台：接口错误率、订单校验、重复 SN、跨租户拦截、pending 积压、Admin 审核、批量操作、PII 处理。
+
+所以真实实现里既有 SDK/Snowplow 事件，也有 Prometheus 指标，比如 HTTP 请求、注册结果、重复 SN、配置拉取、订单校验、Admin 审核动作、pending gauge、批量处理等。这样线上问题可以从“用户在哪一步失败”追到“后端/后台具体哪个状态异常”。
+
+### 深挖 Q6：Provisioning Kit 的接口设计怎么判断是否合理？
+
+**回答：**
+我会用四个标准判断：
+
+1. **依赖方向是否正确**：API 包不能依赖 feature 包，更不能依赖宿主 App。
+2. **接口是否表达业务能力，而不是宿主实现细节**：例如 `ProvisioningHostBridge` 表达“打开帮助页/流程完成”，而不是暴露某个 App 的 FlutterBoost 字符串路由。
+3. **参数和返回值是否稳定**：比如 `ProvisioningCorePort` 用 session、stage、error code、result 这类通用模型，而不是某端临时 Map。
+4. **是否可测试**：每个宿主能力都要能 Fake，SDK 在 example 或测试环境能跑主流程，不依赖真 App、真设备或真后端才能验证基础逻辑。
+
+### 深挖 Q7：多个 App 对同一个 SDK 接口需求不一致怎么办？
+
+**回答：**
+不能为了每个 App 都加一套专属接口，否则 SDK 会退化成多个 App 的 if-else 集合。我通常先判断差异属于哪一类：
+
+1. **业务主流程差异**：看能否抽象成配置、feature flag 或 strategy。
+2. **宿主能力差异**：放到 Host Adapter，比如导航、HTTP、埋点、主题、多语言。
+3. **UI 差异**：如果只是不一样的页面表现，优先用 SDK UI / 自定义 UI 两种模式解决。
+4. **设备能力差异**：用设备型号、固件版本、能力 bit 或后端配置控制，而不是让 App 硬编码。
+
+如果差异只服务某一个 App 且没有通用价值，我倾向不放进核心 API，而是放在宿主 Adapter 或扩展能力里，避免污染主契约。
+
+### 深挖 Q8：接口里出现某些 App 暂时用不到的方法，是否说明设计不合理？
+
+**回答：**
+不一定，要看这个方法是不是稳定业务能力。如果它属于配网流程的完整能力，比如打开帮助页、上报埋点、获取 HomeBase 列表、结束流程回调，即使某个 App 当前用不到，也可能是合理的可选能力。
+
+但如果一个接口强迫所有 App 都实现大量当前不用的方法，就会增加接入成本。更合理的做法是：
+
+- 把必需能力和可选能力拆开。
+- 可选能力提供默认实现或 no-op。
+- 用 capability / feature flag 表达宿主是否支持。
+- 对高风险可选能力在运行时明确降级，而不是静默失败。
+
+比如 `ProvisioningTracker` 可以有 no-op tracker，`ProvisioningErrorReporter` 可以可选；但核心流程需要的 HTTP、Native port、流程完成回调就不能没有。
+
+### 深挖 Q9：SDK 接口应该设计得细还是粗？
+
+**回答：**
+过细会让宿主接入成本高，过粗又会导致 SDK 无法复用。我的原则是：对外接口按业务能力抽象，对内实现可以细。
+
+例如对外不要暴露很多“某个页面点击某个按钮”的方法，而是暴露 `startFlow`、`onFlowCompleted`、`openHelp`、`track`、`request`、`createSession/commitBind` 这类稳定能力。SDK 内部可以有更细的 service、state、adapter 和 page controller。
+
+对多 App SDK 来说，接口要避免三类问题：把宿主框架暴露出去、把临时业务字段固化进公共契约、把 Android/iOS 某一端实现细节变成 Flutter API。
+
+### 深挖 Q10：原生栈和 Flutter 栈混合使用最大的坑是什么？
+
+**回答：**
+最大的问题是生命周期和状态归属不清。Flutter 页面、Android Activity、Native SDK、BLE/WebSocket 连接、MethodChannel 回调各自有生命周期，如果没有统一 session 或 task 概念，就容易出现页面销毁后 Native 还回调、旧任务回调到新页面、资源没有释放、双端行为不一致。
+
+所以混合栈要先定义清楚：
+
+- 谁创建 session，谁释放 session。
+- 页面退出、用户取消、系统杀后台时怎么 cancel。
+- MethodChannel 回调是否带 requestId/sessionId。
+- 错误码由谁定义，双端是否一致。
+- Native 资源 release 后是否还能回调 Flutter。
+
+Homebase 换网和 Provisioning Kit 都能说明这个问题：Flutter 负责流程和页面，Native 负责 BLE/WebSocket/底层 SDK，必须用明确的通道契约和释放策略连接起来。
+
+### 深挖 Q11：Homebase 的资源泄露问题是什么，怎么发现的？
+
+**回答：**
+真实提交里有一个典型问题：`SwitchNetworkManager` 相关修复中，BLE 30s 超时分支原来写法有问题，`withTimeoutOrNull` 后面的兜底代码被解析成 lambda，没有真正执行，导致超时后 `stopA4xBleScan()` 没有被调用，也就是一次 BLE 扫描资源没有正确停止。
+
+发现方式一般来自两类信号：一是联调或测试中发现 30s 后没有预期回调、Flutter 等待超时；二是查看日志和代码路径，发现超时分支没有真正触发清理逻辑。最终修复是把兜底分支改成 `run { ... }`，让 `stopA4xBleScan()` 和 `return false` 真正从外层函数执行。
+
+面试可以强调：这个问题不是 UI bug，而是混合栈里“异步超时 + Native 资源释放”问题。解决时要确认所有失败、取消、超时路径都释放 BLE scan、WebSocket listener 和 pending callback。
+
+### 深挖 Q12：Homebase 在线换网为什么会出现二次 setup 死等？
+
+**回答：**
+真实问题是 `SignalConnection` 是共享单例，已经 AUTH 过之后，服务端不会在同一条已认证连接上再次发 AUTH_RESPONSE。之前 `SwitchNetworkManager.setup()` 用自己的本地 `isAuthed` 状态判断，release 后本地状态清空，但共享 `SignalConnection` 实际仍然是 authed。
+
+第二次 setup 时，代码以为要重新等 AUTH_RESPONSE，但服务端不会再发，Flutter 侧就一直等 onConnected，表现成 30s 以上静默。
+
+修复思路是用 `SignalConnection.mIsAuth` 作为单一真相源：如果共享连接已经认证，就短路复用已认证连接，重新挂 listener，把回调路由到当前调用方。同时抽取 listener 构造逻辑，保证 fresh 和 reuse 两条路径行为一致。
+
+### 深挖 Q13：为什么资源释放问题在 Flutter + Native 场景里更容易出现？
+
+**回答：**
+因为 Flutter 的页面生命周期和 Native 资源生命周期不是天然绑定的。Flutter 页面 pop 了，不代表 Native BLE scan、WebSocket、listener、timer、pending map 自动释放。反过来，Native 回调回来时 Flutter 页面可能已经不存在。
+
+所以设计上要有明确的释放入口，比如 `cancel / release / disposeSession`，并且所有路径都要调用：成功、失败、取消、超时、页面返回、Activity 销毁。测试也不能只测 happy path，要专门测超时、重复进入、二次 setup、页面退出后回调。
+
+### 深挖 Q14：Provisioning Kit 的 session API 为什么重要？
+
+**回答：**
+配网不是一次普通请求，而是一个持续流程。它可能包含发现设备、prepare、读取 WiFi、提交绑定、监听 stage、取消、失败重试和释放资源。
+
+如果没有 session，所有状态会散落在页面、Native adapter、BLE callback 和全局变量里，混合栈很容易失控。`ProvisioningCorePort` 里的 `createSession / prepare / fetchWifiList / commitBind / disposeSession / startProvision / stopProvision / stageEventsFor / logs` 把流程显式建模，能让每一次配网都有清晰生命周期。
+
+这也是 SDK 化的关键：新 App 接入时，不需要理解底层 BLE/WebSocket/Native SDK 的全部细节，只要按 session 契约推进流程和释放资源。
+
+### 深挖 Q15：Provisioning Kit 里 l10n/theme 为什么要宿主注入？
+
+**回答：**
+因为它是多 App SDK。不同 App 有不同品牌、文案、语言资源、主题色和设计规范。如果 SDK 内部硬编码文案和颜色，新 App 接入时要么改 SDK，要么接受不符合品牌的体验，都会破坏复用。
+
+真实提交里 `ProvisioningL10n` 从生成类改成宿主注入接口，`ProvisioningTheme` 也改成抽象语义色令牌。这样 SDK 页面可以复用流程和布局，但文案和视觉由宿主决定。默认实现只做兜底，不作为业务 App 的最终表现。
+
+### 深挖 Q16：Provisioning Kit 的 HomeBase 子设备绑定为什么要用 HubLoader？
+
+**回答：**
+HomeBase 列表和能力信息属于宿主 App 的业务数据，不应该由 SDK 硬编码从某个 App 的接口里拿。`HubLoader/HubCandidate` 提到 API 包，并通过 `ProvisioningKitConfig.hubLoader` 注入，就是为了让 SDK 只依赖“我需要可选 Hub 候选”的抽象，而不是依赖 g0-flutter 的具体接口。
+
+这样不同 App 如果获取 HomeBase 的方式不同，可以各自实现 HubLoader；SDK 内部的 hub_select 和 sub_device_search 流程仍然可以复用。
+
+### 深挖 Q17：Homebase 固件门控的边界问题怎么讲？
+
+**回答：**
+固件门控最容易出错的是边界值。真实提交里一开始判断 `firmwareId > 1.0.0` 才开放新功能，后来修正为 `>= 1.0.0`，因为生产 HUB 的 `1.0.0-d` 剥离 debug 后缀后等同 `1.0.0`，也应该走新功能。
+
+这个问题说明门控不能只按产品口头描述写，要结合真实固件版本格式、比较函数、debug 后缀、旧固件回退路径和单测。好的回答不是“我加了版本判断”，而是“我把版本门控做成统一函数，并用单测覆盖大于、等于、小于、debug 后缀、空值、非法字符串和回退分支”。
+
+### 深挖 Q18：如果面试官问“这些代码很多是 AI 生成的，你怎么保证不是拼出来的？”
+
+**回答：**
+我会说 AI 生成不是问题，问题是有没有工程约束。真实项目里我会用以下方式约束：
+
+- 先写设计、ADR 或任务说明，明确边界。
+- 用测试覆盖关键分支，比如固件门控、解绑分流、换网 fallback、Admin 审核状态机。
+- 对 AI 产物做 code review，尤其看状态机、并发、错误码、资源释放、跨租户和可观测性。
+- 用 CI / analyze / unit test / integration test 做机器验证。
+- 上线后用埋点和看板观察实际数据。
+
+所以我的价值不是“我手写了所有代码”，而是“我把 AI 交付纳入了可验证、可审查、可回滚的流程”。
+
+### 深挖 Q19：如果多个 App 要求接口字段不一样，公共 API 要不要兼容所有字段？
+
+**回答：**
+不能无脑兼容。公共 API 字段应该来自稳定领域模型，而不是某个 App 的临时页面字段。我的处理顺序是：
+
+1. 先判断字段是否属于核心领域，比如设备 SN、Hub SN、bind type、session id、error code、stage，这些可以进公共 API。
+2. 如果是宿主展示字段，比如页面标题、品牌文案、跳转参数，放到 HostBridge、l10n、theme 或配置里。
+3. 如果是某个 App 的临时实验字段，用 feature flag 或扩展 map，但要控制作用域和生命周期。
+4. 如果字段未来可能标准化，可以先放在可选 capability 下，不让所有 App 被迫实现。
+
+设计原则是：公共 API 稳定、少而准；宿主差异通过 Adapter 消化；临时需求不要污染核心契约。
+
+### 深挖 Q20：如果 SDK 接口设计错了，怎么演进？
+
+**回答：**
+先看错误类型。如果只是新增可选字段，可以保持向后兼容；如果是语义错误，比如字段名表达错、错误码不准确、生命周期设计不对，就要通过版本化和迁移方案处理。
+
+具体做法：
+
+- 新增新接口或新字段，旧接口标 deprecated。
+- 在 adapter 层兼容旧宿主一段时间。
+- 用文档/CHANGELOG/迁移指南说明差异。
+- 加测试防止新旧行为混淆。
+- 对涉及 Native 双端的接口，必须 Android/iOS 同步定义错误码和返回结构。
+
+不要为了短期省事直接破坏公共 API，否则多 App SDK 的维护成本会迅速失控。
+
+---
+
+## 5.6 简历加粗点专项深挖：按“是什么 / 为什么 / 怎么做 / 结果”回答
+
+这一节专门覆盖简历里加粗的关键词。面试时如果对方直接指着某个词问，不要只解释概念，要先给结论，再结合自己的项目实现展开，最后落回业务价值。
+
+### 加粗点 Q1：你简历里写“设备绑定”，这里的设备绑定到底是什么？
+
+**回答：**
+我这里说的设备绑定，不是单纯把一个设备添加到 App 列表里，而是把 App 账号、设备身份、网络能力、Native 连接能力、云端注册状态和后续可管理关系打通。
+
+具体到我的项目里，设备绑定至少包含几层：
+
+1. **发现设备**：可能来自扫码、BLE 广播、局域网发现、Matter 流程或已有 Hub 下的子设备发现。
+2. **校验前置条件**：包括蓝牙、定位或附近设备权限、WiFi 状态、固件版本、设备型号、账号态和当前 App 是否支持该能力。
+3. **完成连接与注册**：通过 Flutter 页面编排流程，底层由 Android/iOS Native SDK、MethodChannel 或 AAR 提供 BLE、WiFi、Matter 等能力。
+4. **处理异常和回退**：比如权限未授权、蓝牙未开启、固件不支持、设备离线、二次 setup、Native 资源未释放等。
+5. **完成可观测闭环**：记录绑定阶段、错误码、耗时、成功率和失败原因，否则线上只知道“用户绑定失败”，不知道失败在哪里。
+
+所以我讲设备绑定时，重点不是“我写了一个添加设备页面”，而是我处理过设备绑定链路里的状态机、Native 通道、宿主能力、可观测和多 App 复用问题。Provisioning Kit 负责把这套能力 SDK 化，智能家居中枢 Hub 项目负责把新硬件的绑定模型落到量产链路里。
+
+### 加粗点 Q2：“智能家居中枢 Hub 新型号”怎么向不了解业务的面试官解释？
+
+**回答：**
+可以把它解释成一个新的智能家居中枢设备。它不是普通摄像头，而是一个 Hub，可以管理摄像头等子设备，所以 App 侧的绑定关系从“设备直接绑定到账号”变成了“子设备绑定到 Hub，再由 Hub 统一管理”。
+
+为什么这个变化重要？因为绑定模型一变，App 侧就不只是加一个入口，而是很多核心链路都要变：
+
+1. **相机绑 Hub**：用户要选择哪个 Hub，校验 Hub 和相机是否支持绑定关系。
+2. **设备卡片展示**：设备列表要表达 Hub 和相机的父子关系，不能再按普通单设备展示。
+3. **固件校验**：新旧固件能力不同，不能把新功能暴露给不支持的设备。
+4. **在线/离线换网**：Hub 在线和离线时换网能力、连接路径、失败恢复方式不同。
+5. **解绑保留配对**：解绑时可能需要保留底层配对关系，便于后续重新接入。
+
+我的角色是移动端业务负责人，核心工作是把这些业务变化拆给 Android、iOS、Flutter、iOS Core SDK 四个仓一起落地，并保证新旧固件下核心售卖功能可用。最终价值是支撑新一代中枢 Hub 完成 App 侧功能闭环，能发布、上架和量产售卖。
+
+### 加粗点 Q3：“售后保修”和“保修延保业务闭环”具体闭环了什么？
+
+**回答：**
+Warranty Plus 的闭环不是一个简单表单，而是把用户保修申请、设备信息、Amazon 订单号、App 账号和运营审核串起来，让售后从“用户提交信息”变成“可以审核、追踪、回写状态、复用到多个 App 的业务系统”。
+
+这个闭环里有几类对象：
+
+1. **用户侧**：App 内申请入口、订单号填写、设备选择、状态展示、弱网缓存。
+2. **服务端侧**：用户、设备、订单号、保修申请、审核状态等模型与接口。
+3. **运营侧**：Next.js Admin 后台支持列表、详情、订单号核验、审核操作、状态回写。
+4. **可观测侧**：通过埋点和 Grafana 看申请量、成功率、异常、SDK 健康度和功能使用状况。
+
+为什么叫闭环？因为它不是 App 把数据发出去就结束，而是运营能审核，审核结果能回到用户侧，线上异常能被监控发现，多 App 后续也能复用同一套 SDK、服务和后台。我的贡献是负责整体方案、接口边界、数据模型、联调验收和可观测，不会把自己包装成传统资深 Go 后端，但我能借助 AI Agent 把完整业务链路交付出来，并用 review、测试和看板把质量收住。
+
+### 加粗点 Q4：“AI 辅助全栈交付”怎么讲才不像只是让 AI 写代码？
+
+**回答：**
+我会先明确：AI 辅助全栈交付不是把需求丢给 AI 生成代码，而是我负责工程边界和验收闭环，AI 负责在明确约束下提升实现效率。
+
+在 Warranty Plus 里，我把工作拆成几层：
+
+1. **方案层**：先定义 App、Go 服务、MySQL、Next.js Admin、埋点看板各自职责，避免所有逻辑混在一起。
+2. **契约层**：明确接口字段、状态流转、错误处理、审核权限、订单号和设备关系。
+3. **实现层**：让 AI Agent 辅助完成后端/Web/测试/文档等代码实现，但每一块都以方案和接口为边界。
+4. **验收层**：我负责接口验收、核心逻辑审查、联调、线上观测和问题回收。
+5. **质量层**：用测试、review、golden data、可观测看板和文档沉淀防止 AI 生成的代码“看起来能跑但边界不清”。
+
+所以这个项目能体现我的价值，不是我手写了每一行后端代码，而是我能把一个跨 App、Web、后端、数据库和监控的业务闭环拆清楚、交付出来，并且上线后保持稳定。
+
+### 加粗点 Q5：“Provisioning Kit 配网 SDK”到底做了什么架构迁移？
+
+**回答：**
+Provisioning Kit 是把原来分散在多个 App 里的设备配网能力沉淀成 SDK。迁移前，各 App 可能复制页面、复制 Native 通道适配、复制错误处理和流程编排，导致新 App 接入成本高，线上问题修复也很难同步。
+
+我的设计思路是把配网拆成几层：
+
+1. **API 包**：放稳定契约和值对象，比如 session、stage、错误码、设备信息、配置模型。
+2. **Feature 包**：放具体页面、流程编排、错误处理、设备发现、绑定结果处理。
+3. **宿主 Adapter**：把 HTTP、权限、导航、i18n、埋点、账号态、主题等宿主能力外置。
+4. **Native Port**：通过 MethodChannel 和 Android/iOS 底层能力连接 BLE、WiFi、Matter、AAR 等能力。
+5. **可观测**：把配网关键阶段、成功率、失败原因、耗时分布沉淀成埋点和看板。
+
+这样做的结果是：沿用 SDK UI 的新 App 可以复用大部分页面和流程；如果 App 要换新 UI，也可以复用状态机、Native 通道、业务适配层和错误处理。简历里写的降低 70%-80% 和减少 50%-60%，就是分别对应“沿用 SDK UI”和“自定义 UI 但复用核心能力”的两种接入模式。
+
+### 加粗点 Q6：“Split API + 宿主 Adapter”完整设计怎么讲？
+
+**回答：**
+这套设计的核心是把“稳定公共能力”和“不同 App 的差异能力”分开。公共能力进 SDK，宿主差异通过 Adapter 注入。
+
+具体设计可以这样讲：
+
+1. **Split API**：把接口、模型、错误码、状态、回调协议放在 API 层，保持稳定、低依赖、可被多个 App 编译期引用。
+2. **Feature 实现**：把页面、流程、状态机、服务编排放在实现层，消费 API 层契约。
+3. **Host Adapter**：宿主 App 提供网络请求、登录态、导航、权限、文案、主题、埋点等能力，SDK 不直接依赖宿主工程。
+4. **Native Adapter**：Android/iOS 的 BLE、WiFi、Matter 等能力通过统一通道暴露给 Flutter 层，收敛参数、错误码和回调模型。
+5. **扩展机制**：如果某个 App 有额外字段，不直接污染公共 API，而是优先放到配置、capability、可选字段或 Adapter 扩展里。
+
+为什么这样做？因为多 App SDK 最怕公共 API 被单个 App 的临时需求拖乱。Split API 保证稳定性，宿主 Adapter 消化差异，Feature 包复用实现，这样 SDK 才能长期维护。
+
+### 加粗点 Q7：“SDK UI / 自定义 UI”两种模式为什么都要支持？
+
+**回答：**
+这两个模式解决的是不同 App 的接入诉求。不是所有 App 都愿意使用完全相同的页面，但它们又不应该重复实现底层配网流程。
+
+两种模式的区别是：
+
+1. **SDK UI 模式**：SDK 提供完整页面、流程、状态、错误处理和结果页。新 App 接入最快，主要配置宿主能力、主题、文案和入口。
+2. **自定义 UI 模式**：App 自己实现页面，但复用 SDK 的 session、状态机、Native 通道、错误码、设备发现、绑定流程和埋点模型。
+
+为什么不能只做 SDK UI？因为不同品牌 App 可能有不同视觉规范、页面路径或运营诉求。为什么不能只做底层 API？因为那样每个 App 还是要重复写大量流程和异常处理。
+
+所以这两种模式一起存在，才能兼顾接入效率和产品差异。简历里的收益也对应这两种模式：沿用 SDK UI 时接入工作量预计降低 70%-80%；自定义 UI 时核心能力可复用，接入工作量预计减少 50%-60%。
+
+### 加粗点 Q8：“MethodChannel、AAR、BLE/WiFi/Matter、Snowplow”这些技术栈怎么结合项目回答？
+
+**回答：**
+我不会把这些词单独背定义，而是放回配网链路里解释它们的位置。
+
+1. **MethodChannel**：负责 Flutter 和 Native 的桥接。Flutter 编排页面和流程，Android/iOS 提供 BLE、WiFi、底层 SDK 等能力，双方通过方法名、参数、错误码、回调模型通信。
+2. **AAR**：是 Android Native 能力的交付制品。底层配网能力不适合每个 App 复制源码，所以通过 AAR 版本交付，Flutter plugin 或宿主再接入。
+3. **BLE/WiFi/Matter**：它们是设备发现、连接、配网和标准协议能力的一部分。不同设备型号可能走不同路径，所以 SDK 要把差异隐藏在底层 Port 或 Adapter 后面。
+4. **Snowplow**：用于行为和链路埋点，记录用户走到哪个阶段、失败在哪个错误码、耗时如何。
+5. **Grafana**：用于看聚合后的线上指标，比如成功率、失败原因、耗时分布、SDK 健康度和异常趋势。
+
+总结就是：MethodChannel 和 AAR 解决“Flutter 怎么用 Native 能力”，BLE/WiFi/Matter 解决“设备怎么连上”，Snowplow/Grafana 解决“线上链路是否健康、失败在哪里”。
+
+### 加粗点 Q9：“4 仓锁步演进”怎么保证不乱？
+
+**回答：**
+4 仓锁步不是四个仓同时改这么简单，而是同一个业务能力涉及 Flutter、Android、iOS、iOS Core SDK 时，要先把契约和行为定义清楚，再按相同节奏实现、联调和回归。
+
+我一般按这个顺序推进：
+
+1. **先定业务链路**：例如相机绑 Hub、换网、解绑保留配对，需要明确入口、状态、失败分支和结果页。
+2. **再定跨端契约**：包括参数、错误码、回调、固件能力判断、Native 能力返回结构。
+3. **拆仓实现**：Flutter 负责页面和流程编排，Android/iOS 负责系统权限、BLE、网络、底层能力，iOS Core SDK 负责更底层的设备能力。
+4. **联调确认**：用相同设备、相同固件、相同场景确认 Android/iOS/Flutter 行为一致。
+5. **风险回收**：通过固件门控、埋点、回退路径和异常链路确认减少量产风险。
+
+Homebase 项目里，4 仓锁步的价值是避免“Flutter 页面已经开放入口，但某个 Native 端能力没准备好”这种发布事故。我的角色就是让跨仓改动对齐业务节奏，而不是各仓各自实现。
+
+### 加粗点 Q10：“Permission Guard、SingleTask、固件版本门控”分别解决什么？
+
+**回答：**
+这三个点本质上都是在降低复杂设备链路的发布风险，但解决的层次不同。
+
+1. **Permission Guard** 解决前置条件问题。比如蓝牙没开、权限未授权、系统能力不可用、固件不支持，如果不提前拦截，用户会进入流程中途失败。Guard 的价值是把不可继续的状态提前识别，并给出正确引导。
+2. **SingleTask** 解决流程隔离问题。绑定、换网、解绑这类流程有多个页面和异步回调，如果重复点击、回退、二次进入都堆在同一个返回栈里，很容易导致状态错乱。SingleTask 或独立任务栈可以让关键流程更可控。
+3. **固件版本门控** 解决新旧硬件能力差异问题。新固件支持新功能，旧固件不支持，如果 App 不做门控，就会把不可用能力暴露给用户，导致发布风险。
+
+结合真实实现可以说：Homebase 里有 `DeviceHelper.supportsNewFirmwareFeatures` 这类能力判断，也有解绑保留配对独立页面、在线/离线换网、BLE fallback 和固件门控相关改动。我的设计目标不是堆功能，而是保证新旧固件下用户不会进入错误路径。
+
+### 加粗点 Q11：“埋点数据看板 / 追踪成功率、失败原因、耗时分布”怎么设计？
+
+**回答：**
+我会先从问题出发：设备绑定和保修申请都不是本地功能，线上失败可能来自权限、固件、设备、网络、后端、用户取消或运营审核。如果没有埋点和看板，只能等客诉，定位也很慢。
+
+设计时我会按四层来做：
+
+1. **定义业务阶段**：例如配网开始、权限检查、设备发现、Native 连接、云端绑定、结果页；Warranty 里是申请入口、订单号填写、设备选择、提交、审核、状态回查。
+2. **定义关键维度**：App、设备型号、固件版本、阶段、错误码、耗时、用户取消、网络状态、后端返回码。
+3. **定义核心指标**：成功率、失败原因、耗时分布、异常占比、SDK 调用量、功能使用状况、审核处理状态。
+4. **建立回收机制**：发现异常后能反查具体阶段和错误码，在客诉前修复小问题。
+
+所以这不是“加几个埋点”这么简单，而是把复杂链路变成可观测系统。Provisioning 看绑定链路健康度，Warranty 看 SDK 健康度、功能使用状况和线上异常问题，Homebase 看新硬件核心链路是否稳定。
+
+### 加粗点 Q12：“多 App 复用”和“节省约 2/3 成本”怎么解释才可信？
+
+**回答：**
+我会把这个数字解释成工程量估算，而不是财务精确统计。它的逻辑是：如果 3 个 App 都要做相同保修能力，传统方式是每个 App 各写一套 App 端逻辑、接口适配、状态页、后台联调和问题修复；SDK 化后，核心 SDK、服务端和后台只做一套，各 App 主要做入口、配置和少量 UI 差异。
+
+拆开看：
+
+1. **可复用部分**：接口模型、状态流转、弱网缓存、配置热替换、服务端接口、后台审核、埋点看板。
+2. **仍需各 App 处理的部分**：入口位置、品牌文案、主题、账号态、少量页面差异和发布节奏。
+3. **维护收益**：线上问题修一处，多 App 同步受益；数据模型和运营后台也不用为每个 App 重建。
+
+所以“节省约 2/3”表达的是多 App 重复开发和后续维护的预计节省。回答时要强调这是基于复用范围的工程估算，不要说成精确财务收益。
+
+### 加粗点 Q13：“接口响应体积减少约 62%”如果被追问，怎么回答？
+
+**回答：**
+这个点要谨慎回答。我会说这是针对保修相关接口在代表性响应上的优化结果，不是所有接口都固定减少 62%。
+
+优化思路主要是：
+
+1. **减少冗余字段**：前端只需要展示和状态判断的字段，不返回内部审核无关字段。
+2. **合并重复结构**：订单、设备、申请状态之间避免重复嵌套。
+3. **明确列表和详情职责**：列表接口返回摘要，详情接口再返回完整信息。
+4. **控制状态枚举**：前后端共享明确状态，不靠大段文案或重复字段推断。
+
+它的意义不只是流量变小，更重要是接口契约变清晰，前端解析和状态判断更稳定。面试时如果对方继续追问，我会说这个数字来自项目内代表性响应前后对比，重点是说明我有关注接口契约和数据冗余，而不是把它包装成核心业务收益。
+
+### 加粗点 Q14：“登记目标达成 25%-30%”怎么讲不夸大？
+
+**回答：**
+这个点要表达为“支撑业务登记目标达成”，不要说成我个人直接提升了 25%-30% 转化率。
+
+我会这样讲：Warranty Plus 补齐了保修登记入口、订单号校验、设备选择、审核状态和运营后台，使业务具备推动用户登记的基础能力。项目交付后，通过 App 入口、状态反馈和运营审核闭环，支撑设备保修登记目标达成 25%-30%。
+
+它背后的研发价值是：
+
+1. 用户能在 App 内完成保修申请，不需要纯人工处理。
+2. 运营能看到订单号、账号、设备和申请状态的关联。
+3. 线上问题能通过看板提前发现，减少功能不可用导致的流失。
+4. 多 App 后续可以复用同一套保修能力。
+
+所以这个数字回答时要落在“业务闭环支撑目标达成”，不要说成自己单独创造了业务转化。
+
+### 加粗点 Q15：“内部工具基础建设”可以怎么讲？
+
+**回答：**
+内部工具基础建设可以讲成研发效率和质量闭环的基础能力，不要讲得太虚。
+
+我会从项目问题出发解释：跨端 SDK 和 AI 辅助开发里，常见问题是接口契约漂移、文档不同步、测试漏场景、review 靠人记忆、线上问题缺上下文。内部工具和流程就是把这些问题前置。
+
+可以举的方向包括：
+
+1. **项目级规则**：通过 `CLAUDE.md` 或项目指南让 AI 和新人知道项目结构、命令、边界和禁区。
+2. **质量门禁**：用 quality_gate 检查测试、契约、文档、ADR、golden data 是否同步。
+3. **问题排查工具**：沉淀日志、埋点、看板、错误码和排查路径，减少线上问题定位时间。
+4. **协作支持**：把跨仓联调、接口验收、review checklist、发布前确认项文档化。
+
+回答时可以总结：这不是一个独立炫技项目，而是服务于 Warranty、Provisioning、Homebase 这类复杂交付的工程基础。
+
+### 加粗点 Q16：“Android 应用开发”和车载 Framework/TBoxService 怎么讲？
+
+**回答：**
+我的 Android 基本盘来自德赛西威阶段，主要是车载互联应用、互联服务 SDK、平台共版代码、旧平台重构，以及接触 Framework 层 TBoxService。
+
+回答时我会分清边界：
+
+1. **我能讲清楚的部分**：Android 页面和业务开发、Kotlin/Java、MVVM、生命周期、Handler、线程切换、Binder IPC 基本理解、SDK 接口设计、跨进程服务调用注意事项。
+2. **我会谨慎表达的部分**：我接触过 Framework 层服务和 TBoxService 开发，但不会把自己包装成底层驱动或 Android 系统内核专家。
+3. **和现在项目的联系**：车载互联里的设备连接、状态管理、系统服务、量产稳定性，迁移到了现在的 IoT 设备绑定、Native 通道、权限、固件和异常恢复上。
+
+所以这段经历的价值是让我有 Android 和软硬结合的基础，后面做 Flutter + Native + IoT SDK 时，不会只停留在页面层。
+
+### 加粗点 Q17：“多设备互联连接管理策略”怎么回答？
+
+**回答：**
+多设备互联连接管理策略，核心是多个设备同时存在连接、重连、切换和资源占用时，不能用单设备思路处理。
+
+可以按设计思路回答：
+
+1. **状态管理**：每个设备要有连接中、已连接、断开、重连、失败、释放等状态。
+2. **优先级管理**：用户当前操作的设备、后台保持连接的设备、可延迟恢复的设备优先级不同。
+3. **资源控制**：蓝牙、网络、系统服务、线程和回调都要有释放策略，避免资源泄漏。
+4. **异常恢复**：要有超时、重试、取消、切换和失败提示，不能无限等待。
+5. **一致性**：UI 展示状态、底层连接状态和云端状态要尽量一致。
+
+结合简历可以说：我参与过相关连接管理策略设计并申请技术专利，但面试中会重点讲策略思路和工程经验，不会夸大成单独主导完整专利体系。
+
+### 加粗点 Q18：“熟悉 AI Agent 驱动研发”具体怎么落地？
+
+**回答：**
+AI Agent 驱动研发的关键是把 AI 当成受约束的工程协作者，而不是自由发挥的代码生成器。
+
+我会按闭环讲：
+
+1. **输入约束**：用需求说明、CLAUDE.md、接口契约、ADR 告诉 AI 项目边界和不能做什么。
+2. **任务拆解**：把功能拆成小任务，比如数据模型、接口、页面、测试、埋点、后台，每一块都有验收标准。
+3. **实现检查**：AI 生成后要 review，重点看接口契约、异常处理、权限边界、数据一致性和可观测。
+4. **质量门禁**：用 quality_gate、AI-TDD、golden data、Doc-Drift Gate、分级 review 检查是否偏离设计。
+5. **线上闭环**：上线后通过日志、指标、埋点看真实运行情况，发现问题再回到文档和测试。
+
+我会强调：AI 能提高交付速度，但工程责任仍然在我。尤其是后端和 Web 部分，我负责方案约束、接口验收和核心审查，而不是把 AI 生成结果直接上线。
+
+### 加粗点 Q19：“ADR、quality_gate、AI-TDD、golden data、Doc-Drift Gate、分级 review”分别怎么解释？
+
+**回答：**
+这些词可以一起解释成 AI 辅助研发的质量约束体系。
+
+1. **ADR**：记录关键架构决策，比如为什么要 Split API、为什么宿主能力 Adapter 化、为什么固件门控放在某层。
+2. **quality_gate**：把必须通过的检查变成门禁，比如测试、lint、接口契约、文档更新、风险项是否完成。
+3. **AI-TDD**：让 AI 在明确测试或验收样例约束下实现，避免先生成大量代码再补救。
+4. **golden data**：固定输入输出样本，防止字段、状态、解析逻辑被改坏。
+5. **Doc-Drift Gate**：检查文档和代码是否漂移，比如文档说有某个错误码，代码却没有实现。
+6. **分级 review**：普通代码看基本质量，接口/数据/权限/跨端契约要更高等级 review。
+
+总结起来，它们解决的是同一个问题：AI 参与后交付速度变快，但如果没有约束，边界漂移和隐藏 bug 也会变快。所以我把 AI 放进可验证、可追溯、可回滚的流程里。
+
+### 加粗点 Q20：如果面试官让你完整设计一个“设备配网 SDK”，你怎么从 0 到 1 讲？
+
+**回答：**
+我会先给总设计：设备配网 SDK 要把用户流程、Native 能力、宿主差异、错误处理和线上可观测分层拆开，不能只封装几个 BLE 方法。
+
+完整设计可以按这几步讲：
+
+1. **定义使用方**：哪些 App 要接入，是否需要 SDK UI，是否有品牌 UI 差异，是否要支持自定义 UI。
+2. **定义核心流程**：发现设备、权限检查、网络选择、设备连接、云端绑定、结果展示、失败恢复。
+3. **拆包设计**：API 包放接口和模型，Feature 包放页面和流程，example 或 demo 用于验证接入。
+4. **宿主能力抽象**：HTTP、账号态、导航、权限、i18n、主题、埋点、配置通过 Adapter 注入。
+5. **Native 能力抽象**：BLE/WiFi/Matter/AAR 通过 Port 或 MethodChannel 统一暴露，定义参数、错误码、回调和取消行为。
+6. **状态机和 session**：每次绑定有独立 session，记录 stage、context、取消、超时、资源释放。
+7. **可观测设计**：按 App、设备型号、固件、阶段、错误码记录成功率、失败原因和耗时。
+8. **兼容和演进**：通过 capability、可选字段、版本化和 deprecate 处理多 App 差异。
+
+最后总结：好的配网 SDK 不是把页面搬到一个包里，而是把复杂设备链路沉淀成可复用、可观测、可演进的能力。
+
+### 加粗点 Q21：如果面试官让你完整设计一个“保修延保模块”，你怎么讲？
+
+**回答：**
+我会先讲目标：保修延保模块的核心是建立用户、设备、订单号、保修申请和运营审核之间的闭环，让用户能申请，运营能审核，App 能展示状态，线上问题能监控。
+
+完整设计可以这样拆：
+
+1. **App / SDK 层**：提供申请入口、订单号填写、设备选择、状态展示、弱网缓存、配置热替换和埋点。
+2. **API 层**：定义提交申请、查询状态、设备列表、配置拉取、审核状态回写等接口。
+3. **数据模型层**：围绕用户、设备、订单号、申请记录、审核状态建模，保证状态可追踪。
+4. **Admin 层**：支持申请列表、详情、订单号核验、审核通过/拒绝、状态回写和运营查询。
+5. **权限边界**：用户只能看到自己的申请，运营后台按角色访问审核能力，接口要有校验。
+6. **可观测层**：通过埋点和 Grafana 看 SDK 调用、申请成功率、异常原因、审核处理和线上问题。
+7. **AI 辅助交付约束**：AI 可以参与 Go/Next.js 实现，但需要接口契约、测试、review 和上线观察兜底。
+
+总结就是：它不是一个表单功能，而是一个 App、服务端、运营后台和数据看板共同组成的业务系统。
+
+### 加粗点 Q22：如果面试官质疑“这些加粗点是不是概念堆叠”，怎么回应？
+
+**回答：**
+我会把每个概念落回真实项目结果。
+
+可以这样回答：
+
+“我理解面试官担心概念堆叠，所以我一般不单独讲名词，而是讲它解决的问题。比如 Split API 解决多 App SDK 的契约稳定问题；宿主 Adapter 解决不同 App 的网络、导航、账号态和埋点差异；Permission Guard 解决用户进入不可恢复路径的问题；固件门控解决新旧硬件能力差异；Grafana 看板解决线上问题不可见；AI 辅助工程化解决全栈交付效率和质量约束问题。每个点都能对应到 Warranty、Provisioning 或智能家居中枢 Hub 项目里的具体实现和收益。”
+
+最后再补一句：“我不会把自己包装成所有领域的专家，但我能把移动端复杂业务拆成清晰边界，并把跨端、SDK、后端、后台、可观测和 AI 协作组织成可交付的工程闭环。”
+
+---
+
+## 6. 德赛西威：Android 基本盘与车载经验
+
+### Q56：你在德赛西威做的工作和现在简历主线有什么关系？
+
+**回答：**
+德赛西威是我的 Android 基本盘，做过车载互联应用、互联服务 SDK、Framework 层 TBoxService、平台共版代码和旧平台重构。
+
+这段经历让我熟悉 Android 应用、系统服务、生命周期、跨进程通信、车载量产流程和软硬结合问题。后来做 IoT 智能家居时，这些经验迁移到了设备连接、Native 能力、状态机、异常恢复和发布稳定性上。
+
+### Q57：DD/RD 文档是什么？
+
+**回答：**
+可以按公司语境解释为设计文档和需求/研发文档。重点不是名词本身，而是说明我不是只接到需求就写代码，而是参与需求分析、技术设计、接口对齐和交付文档。
+
+在车载项目中，文档对量产和跨团队协作很重要，因为涉及客户、系统、测试、供应商和平台共版代码。
+
+### Q58：TBoxService 是什么？
+
+**回答：**
+TBox 通常是车载通信盒相关能力，TBoxService 可以理解为承载车载互联、设备通信或车端状态交互的 Framework 层服务。
+
+我可以讲自己接触过 Framework 层服务、系统通信、生命周期、线程调度和跨进程调用，但不要把自己包装成底层驱动专家。
+
+### Q59：Binder IPC 怎么理解？
+
+**回答：**
+Binder 是 Android 主要的跨进程通信机制，Framework 层服务、系统服务、App 进程之间很多通信都基于 Binder。
+
+我在车载项目中接触过 Framework 层服务，因此会关注接口稳定性、调用不能阻塞、异常处理、跨进程对象生命周期和线程切换。这些经验对后来的 Native SDK 设计也有帮助。
+
+### Q60：Handler 怎么理解？
+
+**回答：**
+Handler 配合 Looper 和 MessageQueue 做线程间消息调度。主线程有主 Looper，Handler 可以把任务投递到指定线程执行。
+
+在设备连接、蓝牙回调、系统服务回调里，经常需要从后台线程切回主线程。风险是内存泄漏和延迟消息误触发，所以页面销毁或任务结束时要移除 callback。
+
+### Q61：多设备互联连接管理策略怎么讲？
+
+**回答：**
+核心是多个设备同时存在连接、重连、切换、优先级和资源占用时，不能简单用单设备连接逻辑处理。
+
+策略会考虑设备类型、连接状态、业务优先级和异常恢复，避免连接冲突或资源竞争。面试时我会重点讲设计思路，不夸大成已经商业化的核心专利壁垒。
+
+---
+
+## 7. 技术名词深挖：从项目引申到概念
+
+### Q62：Android Kotlin / Java 在你项目里怎么用？
+
+**回答：**
+在德赛西威主要用于 Android 应用、互联服务 SDK 和 Framework 相关开发；在智能家居项目里，主要用于 Android Native 能力、MethodChannel 实现、权限、BLE 状态、固件门控、解绑参数和 Native SDK 适配。
+
+我不是只写 Flutter 页面，Android 仍然是我处理 Native 能力和系统差异的重要基础。
+
+### Q63：MVVM 怎么讲？
+
+**回答：**
+MVVM 的核心是 View 负责展示和用户事件，ViewModel 管状态和业务编排，Repository 或 Service 负责数据和外部依赖。
+
+在设备绑定里，ViewModel 可以维护权限状态、扫描状态、当前步骤、错误状态和按钮可用状态。但复杂 IoT 链路不能把所有逻辑塞进 ViewModel，底层 session、Port、Adapter 仍然要拆出去。
+
+### Q64：MethodChannel 常见坑有哪些？
+
+**回答：**
+常见坑包括：Android/iOS 返回结构不一致，错误码不统一，参数 optional/required 没定义清楚，异步回调生命周期不一致，页面销毁后 Native 还回调。
+
+解决方式是契约先行：方法名、参数、返回结构、错误码、线程和取消行为先定义清楚，双端按同一套契约实现。
+
+### Q65：Flutter Monorepo / Package 化怎么讲？
+
+**回答：**
+Monorepo 适合多个 package 联动开发，比如 API 包、feature 实现包、example、测试装配。Package 化的关键是依赖方向清楚：API 包稳定低依赖，feature 包实现业务，宿主 App 提供 Adapter。
+
+风险是循环依赖和边界污染，所以要明确哪些包能依赖哪些包，API 包不能反向依赖实现包或宿主 App。
+
+### Q66：设计模式怎么结合你的项目讲？
+
+**回答：**
+代理模式对应宿主 Adapter，把宿主能力代理给 SDK。单例用于通道管理或全局配置，但要注意测试替换和生命周期。工厂/建造者用于创建复杂配置或 session。观察者用于绑定状态、设备状态、审核状态变化。策略模式用于不同设备类型、固件能力、渠道或 App 差异。
+
+我不会为了模式而模式，而是从项目问题出发讲模式解决了什么变化点。
+
+### Q67：ADR 是什么，为什么要用？
+
+**回答：**
+ADR 是 Architecture Decision Record，用来记录重要架构决策，包括背景、选项、选择、后果和后续影响。
+
+在跨端和 AI 辅助开发中，ADR 的价值是防止架构边界被局部代码改坏。比如为什么要 Split API，为什么宿主能力要 Port 化，为什么固件门控放在某一层，这些都需要有可追溯的决策依据。
+
+### Q68：quality_gate 是什么？
+
+**回答：**
+quality_gate 是把关键质量检查变成门禁，比如测试是否跑过、文档是否同步、ADR 是否存在、接口契约是否漂移、golden data 是否匹配。
+
+它解决的是 review 靠人记忆容易漏的问题，尤其 AI 参与开发后，更需要自动化或半自动化的底线检查。
+
+### Q69：golden data 是什么？
+
+**回答：**
+golden data 是固定输入输出样本，用来验证模型、接口、配置解析或协议解析是否被改坏。
+
+比如订单号校验、接口响应解析、Dart model、配置字段，都可以用 golden data 固定预期。AI 很容易改字段名或漏边界，golden data 能快速暴露问题。
+
+### Q70：Doc-Drift Gate 是什么？
+
+**回答：**
+Doc-Drift Gate 是检查文档和代码是否漂移。比如 ADR 说 API 包零依赖，但代码引入了 UI 依赖；设计文档说有某个错误码，但代码没实现；代码新增能力但文档没有同步。
+
+AI 参与后文档漂移更常见，所以需要专门检查。
+
+### Q71：GitLab CI/CD、Jenkins、SonarQube、GTest、Playwright 怎么讲？
+
+**回答：**
+GitLab CI/CD 和 Jenkins 是流水线工具，负责构建、测试、检查和部署流程。SonarQube 看静态质量、复杂度、重复代码、潜在 bug 和覆盖率趋势。GTest 偏 C/C++ 或 native 层单元测试。Playwright E2E 用于 Web 管理后台或关键用户路径的端到端验证。
+
+我不会把它们讲成全部深度专家，而是讲我理解它们在工程质量闭环里的位置。
+
+### Q72：Android Framework 开发经验怎么讲？
+
+**回答：**
+可以结合德赛西威经历讲 Framework 层 TBoxService、Binder IPC、Handler、系统服务通信、线程调度和生命周期。
+
+同时保持边界：我有项目使用和联调经验，理解 Framework 层服务和 App 层的协作，但不把自己包装成 Android 系统内核或驱动专家。
+
+---
+
+## 8. 跨端综合追问：把三个项目串起来
+
+### Q73：Android、iOS、Flutter、后端一起改时，你怎么控制一致性？
+
+**回答：**
+先定契约，再分端实现。契约包括 API、MethodChannel、错误码、状态机、固件门控、数据字段和测试用例。
+
+然后每端按同一份契约实现，最后用联调 checklist、E2E 或关键路径测试验证。如果不能同时上线，就要设计兼容，比如 optional 字段、feature flag、版本门控和降级路径。
+
+### Q74：跨端功能怎么设计测试矩阵？
+
+**回答：**
+按“平台 x 场景 x 状态”建矩阵。平台包括 Android、iOS、Flutter、后端；场景包括主路径、权限拒绝、蓝牙未开、网络失败、固件不支持、重复提交；状态包括新旧版本、新旧固件、在线离线。
+
+不是每个组合都自动化，但高风险组合必须覆盖，低风险组合可以 smoke。
+
+### Q75：如何判断问题出在 App、Native、设备还是后端？
+
+**回答：**
+靠分层信号。Flutter 层看页面状态和 MethodChannel 请求；Native 层看 BLE/WiFi/session 日志；设备侧看固件版本和协议响应；后端看 request id、接口日志和业务指标。
+
+所以设计时就要有 correlation id、错误来源和结构化错误码。没有这些信号，排障只能靠猜。
+
+### Q76：IoT 设备绑定最难的是什么？
+
+**回答：**
+最难的是不确定性：用户权限、蓝牙状态、WiFi 环境、固件版本、设备状态、云端接口、App 生命周期都可能出问题。
+
+所以绑定链路不能只写 happy path，必须有状态机、超时、取消、重试、降级、错误分类和观测。这也是我强调 SDK 架构和 session API 的原因。
+
+### Q77：如何设计设备绑定状态机？
+
+**回答：**
+先列状态：idle、checkingPermission、scanning、connecting、fetchingWifi、binding、success、failed、cancelled、timeout。
+
+再定义每个状态允许的事件和转换，比如 cancel 在哪些状态有效，timeout 后是否能 retry，success 后是否允许重复回调。最后给关键转换加日志和指标，排障时能知道卡在哪一步。
+
+### Q78：你如何解释“移动端架构”不是空话？
+
+**回答：**
+移动端架构不是画图，而是解决依赖、边界、版本、测试和发布问题。
+
+比如 API 包不能污染依赖，Native 通道要统一契约，宿主能力要通过 Port 注入，SDK 要能在多个 App 复用，硬件能力要有固件门控，AI 产物要有质量门禁。这些都会真实影响交付和维护成本。
+
+---
+
+## 9. 压力追问：守住真实边界
+
+### Q79：你是不是更像移动端，不适合全栈岗位？
+
+**回答：**
+如果岗位要求我作为资深后端专家独立负责复杂后端平台，那确实不是我最强项。
+
+但如果岗位需要移动端负责人、跨端架构、SDK 化，以及能借助 AI 和工程化手段推动后端/Web 配套交付，我是匹配的。我的优势是能把端、云、设备、测试、文档串成完整交付闭环。
+
+### Q80：AI 写的代码算你的成果吗？
+
+**回答：**
+我不会把 AI 写的每一行代码都说成自己手写。我的成果是把 AI 变成可控工程生产力：我定义需求、边界、接口、数据模型、测试和验收标准，AI 在这个框架下执行。
+
+代码最终能不能上线，不取决于 AI 写没写，而取决于是否通过契约、测试、review、可观测和发布验证。
+
+### Q81：如果不用 AI，你还能完成这些工作吗？
+
+**回答：**
+移动端和 SDK 架构部分可以，这是我的基本能力。后端/Web 的交付效率会下降，可能需要更多时间或后端同事配合。
+
+AI 提升的是执行速度和覆盖范围，不替代我对架构、边界和质量的判断。
+
+### Q82：你最强的项目是哪一个？
+
+**回答：**
+如果讲 AI 辅助全栈交付，我会选 Warranty Plus，因为它体现了 App、SDK、后端、后台、数据库和可观测闭环。
+
+如果讲 SDK 架构，我会选 Provisioning Kit，因为它体现了 Split API、宿主 Adapter、MethodChannel、AAR 和多 App 复用。
+
+如果讲跨端协同，我会选 Homebase，因为它体现了 Android / iOS / Flutter / iOS Core SDK 4 仓锁步和新硬件量产目标。
+
+### Q83：你有哪些短板？
+
+**回答：**
+我最明确的短板是后端深度不如长期专职后端工程师，复杂分布式治理、高并发中间件调优不是我的主场。
+
+但我在补的是工程闭环能力：接口设计、数据模型、测试、部署、可观测、AI 辅助实现和 review。我会在简历和面试里保持真实边界。
+
+### Q84：如果面试官问 Go 细节，你怎么回答？
+
+**回答：**
+我会如实说我熟悉项目级 Go 服务设计和 AI 辅助实现，但不是长期深耕 Go runtime 的专家。
+
+常规的 handler、service、repo、interface、context、error handling、testing 我能讲；如果问 GMP、内存模型、极限并发调优，我会说这不是我的主要经验。
+
+### Q85：你是不是把项目写得太架构化了？
+
+**回答：**
+我会把回答落回业务结果。Warranty 支撑保修延保闭环，一个月交付且上线后 0 事故；Provisioning 降低新 App 接入成本；Homebase 支撑 HB1 发布、上架和量产售卖。
+
+架构不是为了显得复杂，而是为了降低多 App、多端、多仓、硬件差异和后续维护的成本。
+
+---
+
+## 10. 反问和收尾
+
+### Q86：你希望下一份工作做什么？
+
+**回答：**
+我希望继续做 Android / Flutter / 跨端 SDK / IoT 设备链路相关工作，尤其是 App + Native + 设备 + 云端协同的复杂移动端业务。
+
+如果团队正在探索 AI 辅助研发，我也能把之前的经验带过去，重点不是让 AI 多写代码，而是建立可验证、可追溯、可回滚的工程流程。
+
+### Q87：你有什么想问我们的？
+
+**可以问：**
+1. 团队移动端现在是原生、Flutter 还是混合架构？
+2. 是否有多 App 复用、SDK 化或跨端能力治理诉求？
+3. 设备/硬件相关能力由 App、Native SDK、固件团队分别负责多少？
+4. 团队现在是否使用 AI Agent？有没有质量门禁、review 和测试方面的顾虑？
+5. 这个岗位更看重业务交付、架构治理，还是团队管理？
+
+---
+
+## 11. 背诵版
+
+### 1. 自我定位
+
+我是 Android / 移动端出身，强项是 Flutter SDK 化、IoT 设备链路、Android/iOS/Native 协同，以及 AI 辅助工程化。后端/Web 我能通过 AI Agent 和工程约束完成交付，但不会把自己包装成传统资深后端。
+
+### 2. 三个项目主线
+
+Warranty Plus 体现 AI 辅助全栈交付和业务闭环；Provisioning Kit 体现 SDK 架构和多 App 复用；Homebase 体现移动端业务负责人和 4 仓跨端协同。
+
+### 3. AI 口径
+
+我不是相信 AI，而是约束 AI。通过 ADR、CLAUDE.md、quality_gate、golden data、Doc-Drift Gate、review 和可观测，让 AI 产物可审计、可验证、可归因。
+
+### 4. 架构口径
+
+架构不是画图，而是解决依赖、边界、版本、测试、发布和长期维护问题。我的项目都围绕同一件事：把复杂移动端业务做成可复用、可观测、可演进的工程能力。

@@ -1,0 +1,38 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Summary of Knowledge">
+  <section class="hero">
+    <p class="eyebrow">Personal Knowledge Base</p>
+    <h1>把个人介绍、项目经验、技术笔记和 AI workflow 收进一个可导出的静态站。</h1>
+    <p>本工程使用 Astro + Markdown 构建，输出结果是纯静态 HTML。网站只展示四类核心内容，仓库里的归档、证据材料和私密面试资料不生成页面。</p>
+    <div class="hero-actions">
+      <a href="/notes/">查看技术笔记</a>
+      <a href="/projects/">查看项目经验</a>
+    </div>
+  </section>
+
+  <section class="feature-grid" aria-label="知识库分类">
+    <a class="feature-card" href="/resume/">
+      <span>01</span>
+      <strong>个人介绍</strong>
+      <p>由原简历模块生成，包含当前 HTML 简历、PDF 下载和个人概览入口。</p>
+    </a>
+    <a class="feature-card" href="/projects/">
+      <span>02</span>
+      <strong>项目经验</strong>
+      <p>Warranty Plus、Provisioning Kit、设备绑定和 Homebase 项目总结。</p>
+    </a>
+    <a class="feature-card" href="/notes/">
+      <span>03</span>
+      <strong>技术笔记</strong>
+      <p>Java、Android、性能优化、开源库、网络数据库等学习笔记。</p>
+    </a>
+    <a class="feature-card" href="/skills/">
+      <span>04</span>
+      <strong>AI Workflow</strong>
+      <p>通用自定义 skills 和 superpowers 方法论资产。</p>
+    </a>
+  </section>
+</BaseLayout>

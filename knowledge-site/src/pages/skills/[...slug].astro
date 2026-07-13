@@ -1,0 +1,28 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleShell from '../../components/ArticleShell.astro';
+import { normalizeSlug, titleFromPath } from '../../lib/content.js';
+
+export async function getStaticPaths() {
+  const modules = import.meta.glob('../../content/skills/**/*.md');
+  return Object.entries(modules).map(([path, loader]) => {
+    const slug = normalizeSlug(path, '../../content/skills/');
+    return { params: { slug }, props: { loader, path } };
+  });
+}
+
+const { loader, path } = Astro.props;
+const article = await loader();
+const title = article.frontmatter?.title || titleFromPath(path, '../../content/skills/');
+const headings = article.getHeadings ? await article.getHeadings() : [];
+const isCustomSkill = path.includes('/custom-skills/');
+const backHref = isCustomSkill ? '/skills/custom/' : '/skills/superpowers/';
+const backLabel = isCustomSkill ? '返回 Custom Skills' : '返回 Superpowers';
+const Content = article.Content;
+---
+
+<BaseLayout title={`${title} - AI Workflow`}>
+  <ArticleShell title={title} backHref={backHref} backLabel={backLabel} headings={headings}>
+    <Content />
+  </ArticleShell>
+</BaseLayout>

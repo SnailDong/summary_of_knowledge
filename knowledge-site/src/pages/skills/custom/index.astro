@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ArticleList from '../../../components/ArticleList.astro';
+import PageBack from '../../../components/PageBack.astro';
+import { buildItems } from '../../../lib/content.js';
+
+const modules = import.meta.glob('../../../content/skills/custom-skills/**/*.md');
+const items = buildItems(modules, '../../../content/skills/', '/skills', 'Custom Skill');
+---
+
+<BaseLayout title="Custom Skills - AI Workflow">
+  <PageBack href="/skills/" label="返回 AI Workflow" />
+  <ArticleList
+    title="Custom Skills"
+    description="你整理出的自定义工作流 skills。"
+    items={items}
+  />
+</BaseLayout>

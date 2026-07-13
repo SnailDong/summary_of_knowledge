@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>Observability Plan — Knowledge Site</title>
+</head>
+<body>
+  <main>
+    <h1>Observability Plan — Knowledge Site</h1>
+    <section>
+      <h2>Build Health</h2>
+      <p>核心观测点是同步脚本成功、构建成功、页面数量符合预期、静态资源链接可访问。</p>
+    </section>
+    <section>
+      <h2>Metrics</h2>
+      <ul>
+        <li>synced_markdown_files_total</li>
+        <li>build_success</li>
+        <li>generated_pages_total</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Local Verification</h2>
+      <p>`npm run check:content` 用于本地验证源内容和同步内容是否齐全；`npm run build` 作为 L3 黑盒构建验证。</p>
+    </section>
+  </main>
+</body>
+</html>

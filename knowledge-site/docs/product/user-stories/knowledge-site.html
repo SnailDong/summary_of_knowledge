@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>User Stories — Knowledge Site</title>
+</head>
+<body>
+  <main>
+    <h1>User Stories — Knowledge Site</h1>
+    <section>
+      <h2>Scope</h2>
+      <table>
+        <tbody>
+          <tr><th>涉及的服务和模块</th><td>knowledge-site Astro 静态站、内容同步脚本、个人介绍、项目经验、技术笔记、AI Workflow</td></tr>
+          <tr><th>优先级</th><td>P1</td></tr>
+          <tr><th>是否核心转化路径</th><td>否，个人知识库展示与复习工具</td></tr>
+          <tr><th>是否需要 A/B 实验</th><td>否</td></tr>
+          <tr><th>是否高风险链路</th><td>否，不处理线上交易或不可逆数据</td></tr>
+          <tr><th>可量化核心指标</th><td>本地构建成功；手机端主要页面可阅读；公开内容默认不包含面试私密材料</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section>
+      <h2>US-1: 浏览知识库首页</h2>
+      <p>作为知识库所有者，我希望打开一个静态站首页，快速进入个人介绍、项目经验、技术笔记和 AI workflow 分类，以便在电脑或手机上复习资料。</p>
+      <ul>
+        <li>Given 已生成静态站，When 打开首页，Then 可以看到主要分类入口。</li>
+        <li>Given 使用手机宽度访问，When 浏览首页，Then 分类入口不会横向溢出。</li>
+      </ul>
+    </section>
+    <section>
+      <h2>US-2: 浏览 Markdown 技术笔记</h2>
+      <p>作为复习者，我希望现有 Markdown 技术笔记被转换为文章页，以便按分类阅读。仓库中的归档、面试私密材料和项目内证据材料不需要生成页面。</p>
+      <ul>
+        <li>Given `04-technical-notes/` 存在 Markdown，When 执行同步和构建，Then 每篇笔记生成对应页面。</li>
+        <li>Given 文章包含代码块或图片链接，When 打开文章页，Then 正文结构保持可读。</li>
+      </ul>
+    </section>
+    <section>
+      <h2>US-3: 导出并在手机端查看</h2>
+      <p>作为知识库所有者，我希望可以导出纯静态 HTML 文件夹，以便部署到网址或局域网后用手机访问。</p>
+      <ul>
+        <li>Given 执行 `npm run build`，When 构建成功，Then `dist/` 中包含可部署的静态文件。</li>
+        <li>Given 手机访问部署后的 URL，When 打开文章页，Then 页面布局适配小屏幕阅读。</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

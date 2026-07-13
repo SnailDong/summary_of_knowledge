@@ -1,0 +1,19 @@
+---
+const { title, description, items = [] } = Astro.props;
+---
+
+<section class="section-header">
+  <p class="eyebrow">Knowledge</p>
+  <h1>{title}</h1>
+  {description && <p>{description}</p>}
+</section>
+
+<div class="article-grid">
+  {items.map((item) => (
+    <a class="article-card" href={item.href}>
+      <span>{item.section}</span>
+      <strong>{item.title}</strong>
+      {item.description && <p>{item.description}</p>}
+    </a>
+  ))}
+</div>

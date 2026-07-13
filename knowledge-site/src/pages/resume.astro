@@ -1,0 +1,31 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageBack from '../components/PageBack.astro';
+---
+
+<BaseLayout title="个人介绍 - Summary of Knowledge">
+  <PageBack />
+  <section class="section-header">
+    <p class="eyebrow">Profile</p>
+    <h1>个人介绍</h1>
+    <p>由原简历模块生成，保留当前简历入口。PDF 可直接下载，HTML 版适合浏览器查看。</p>
+  </section>
+
+  <div class="article-grid">
+    <a class="article-card" href="/resume/resume-paged.html">
+      <span>HTML</span>
+      <strong>分页版简历</strong>
+      <p>使用浏览器打开查看排版效果。</p>
+    </a>
+    <a class="article-card" href="/resume/chenguodong.pdf">
+      <span>PDF</span>
+      <strong>当前 PDF 简历</strong>
+      <p>适合下载、发送或手机端预览。</p>
+    </a>
+    <a class="article-card" href="/resume/resume.md">
+      <span>Markdown</span>
+      <strong>简历源文件</strong>
+      <p>保留原始 Markdown 内容。</p>
+    </a>
+  </div>
+</BaseLayout>

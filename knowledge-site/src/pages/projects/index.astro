@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleList from '../../components/ArticleList.astro';
+import PageBack from '../../components/PageBack.astro';
+import { buildItems } from '../../lib/content.js';
+
+const modules = import.meta.glob('../../content/projects/**/*.md');
+const items = buildItems(modules, '../../content/projects/', '/projects', 'Projects');
+---
+
+<BaseLayout title="项目经验 - Summary of Knowledge">
+  <PageBack />
+  <ArticleList
+    title="项目经验"
+    description="只展示项目总结和工作经历主线；项目中使用过的 workflow/skill 证据已独立放入“工作流证据”。"
+    items={items}
+  />
+</BaseLayout>
