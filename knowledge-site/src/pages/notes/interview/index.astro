@@ -1,0 +1,21 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ArticleList from '../../../components/ArticleList.astro';
+import PageBack from '../../../components/PageBack.astro';
+import { buildItems, isInterviewNotePath, omitReadmePath } from '../../../lib/content.js';
+
+const modules = import.meta.glob('../../../content/notes/**/*.md');
+const interviewModules = Object.fromEntries(
+  Object.entries(modules).filter(([path]) => omitReadmePath(path) && isInterviewNotePath(path))
+);
+const items = buildItems(interviewModules, '../../../content/notes/', '/notes', '面试问答');
+---
+
+<BaseLayout title="面试问答 - 技术笔记">
+  <PageBack href="/notes/" label="返回技术笔记" />
+  <ArticleList
+    title="面试问答"
+    description="围绕个人定位、项目经验、技术名词和压力追问整理的面试回答手册。"
+    items={items}
+  />
+</BaseLayout>

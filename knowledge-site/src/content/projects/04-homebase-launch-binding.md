@@ -2,7 +2,7 @@
 
 > - **工作类型**：新硬件产品（HB1/Homebase Hub）上架时的端到端绑定链路；三端 + Core SDK 协同
 > - **仓库**：`g0-flutter-module` / `g0-ios` / `g0-android` / `smartdevicecoresdk-ios`
-> - **时间跨度**：2025-12-25 → 2026-05-28（主要 2026-01~04，VH 4.0.0 → 4.2.0）
+> - **时间跨度**：2025-10 → 2026-01
 > - **我的角色**：新品绑定链路 Owner，三端 + Core SDK 锁步实现
 
 ---
@@ -237,7 +237,7 @@ Flutter UI (g0-flutter-module)
 > **追问:那如果一个任务一直不回来,会不会永远卡 loading?** 两个任务都有超时和错误兜底,BLE 失败 errorCode != null 会进错误页 + Retry,不会无限 loading。
 
 **Q4:这个工作和 #3(解绑保留配对)都涉及 HB1 和固件门控,它们是一个工作吗?**
-> A:不是,是 HB1 这条硬件线上的两个不同特性,只是共享同一个固件门控基础设施(supportsNewFirmwareFeatures >= 1.0.0)。#4 是**新品上架的绑定链路**(相机绑定到 Hub:固件校验、换网、蓝牙、设备卡片),时间上更早(2025-12~2026-04, VH 4.0.0),是"让 HB1 能卖"。#3 是**解绑保留配对**(从 Hub 移除相机但保留配对:RemoveHubDeviceActivity、deactivatedevice retainPairing),更晚(2026-05, VH 4.2.0),是"让 HB1 体验更好"。两者都是我做的,共用固件门控,但功能正交。
+> A:不是,是 HB1 这条硬件线上的两个不同特性,只是共享同一个固件门控基础设施(supportsNewFirmwareFeatures >= 1.0.0)。#4 是**新品上架的绑定链路**(相机绑定到 Hub:固件校验、换网、蓝牙、设备卡片),时间上更早(2025-10~2026-01, VH 4.0.0),是"让 HB1 能卖"。#3 是**解绑保留配对**(从 Hub 移除相机但保留配对:RemoveHubDeviceActivity、deactivatedevice retainPairing),更晚(2026-05, VH 4.2.0),是"让 HB1 体验更好"。两者都是我做的,共用固件门控,但功能正交。
 
 ---
 

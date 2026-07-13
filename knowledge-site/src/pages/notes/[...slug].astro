@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ArticleShell from '../../components/ArticleShell.astro';
-import { isStudyNotePath, normalizeSlug } from '../../lib/content.js';
+import { isInterviewNotePath, isStudyNotePath, normalizeSlug } from '../../lib/content.js';
 
 export async function getStaticPaths() {
   const modules = import.meta.glob('../../content/notes/**/*.md');
@@ -16,8 +16,9 @@ const article = await loader();
 const title = article.frontmatter?.title || decodeURIComponent(path.split('/').at(-1).replace(/\.md$/, ''));
 const headings = article.getHeadings ? await article.getHeadings() : [];
 const isStudyNote = isStudyNotePath(path);
-const backHref = isStudyNote ? '/notes/study/' : '/notes/technical/';
-const backLabel = isStudyNote ? '返回学习笔记' : '返回技术笔记';
+const isInterviewNote = isInterviewNotePath(path);
+const backHref = isInterviewNote ? '/notes/interview/' : isStudyNote ? '/notes/study/' : '/notes/technical/';
+const backLabel = isInterviewNote ? '返回面试问答' : isStudyNote ? '返回学习笔记' : '返回技术笔记';
 const Content = article.Content;
 ---
 

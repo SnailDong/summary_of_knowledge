@@ -4,7 +4,11 @@ import PageBack from '../../components/PageBack.astro';
 
 const studyCount = Object.keys(import.meta.glob('../../content/notes/**/study*.md')).length;
 const allNotes = Object.keys(import.meta.glob('../../content/notes/**/*.md'));
-const technicalCount = allNotes.filter((path) => !path.split('/').at(-1).startsWith('study') && path.split('/').at(-1).toLowerCase() !== 'readme.md').length;
+const interviewCount = allNotes.filter((path) => path.includes('/interview/')).length;
+const technicalCount = allNotes.filter((path) => {
+  const fileName = path.split('/').at(-1);
+  return !path.includes('/interview/') && !fileName.startsWith('study') && fileName.toLowerCase() !== 'readme.md';
+}).length;
 ---
 
 <BaseLayout title="技术笔记 - 蜗牛之家">
@@ -12,7 +16,7 @@ const technicalCount = allNotes.filter((path) => !path.split('/').at(-1).startsW
   <section class="section-header">
     <p class="eyebrow">Technical Notes</p>
     <h1>技术笔记</h1>
-    <p>这里先分成学习笔记和技术笔记两类，方便按阅读目的进入。</p>
+    <p>这里分成学习笔记、技术笔记和面试问答，方便按阅读目的进入。</p>
   </section>
 
   <div class="article-grid">
@@ -25,6 +29,11 @@ const technicalCount = allNotes.filter((path) => !path.split('/').at(-1).startsW
       <span>{technicalCount} 篇</span>
       <strong>技术笔记</strong>
       <p>Java、Android Framework、性能优化、开源库、网络数据库等主题笔记。</p>
+    </a>
+    <a class="article-card" href="/notes/interview/">
+      <span>{interviewCount} 篇</span>
+      <strong>面试问答</strong>
+      <p>围绕个人定位、项目经验、技术名词和压力追问整理的面试回答手册。</p>
     </a>
   </div>
 </BaseLayout>

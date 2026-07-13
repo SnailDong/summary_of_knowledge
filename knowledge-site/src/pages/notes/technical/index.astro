@@ -2,11 +2,11 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ArticleList from '../../../components/ArticleList.astro';
 import PageBack from '../../../components/PageBack.astro';
-import { buildItems, isStudyNotePath, omitReadmePath } from '../../../lib/content.js';
+import { buildItems, isInterviewNotePath, isStudyNotePath, omitReadmePath } from '../../../lib/content.js';
 
 const modules = import.meta.glob('../../../content/notes/**/*.md');
 const technicalModules = Object.fromEntries(
-  Object.entries(modules).filter(([path]) => omitReadmePath(path) && !isStudyNotePath(path))
+  Object.entries(modules).filter(([path]) => omitReadmePath(path) && !isStudyNotePath(path) && !isInterviewNotePath(path))
 );
 const items = buildItems(technicalModules, '../../../content/notes/', '/notes', '技术笔记');
 ---

@@ -48,6 +48,8 @@ export const isStudyNotePath = (path) => {
   return /^study\d+_/i.test(fileName);
 };
 
+export const isInterviewNotePath = (path) => path.includes('/interview/');
+
 export const omitReadmePath = (path) => {
   const fileName = path.split('/').at(-1) || '';
   return fileName.toLowerCase() !== 'readme.md';

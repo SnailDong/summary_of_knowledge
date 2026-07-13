@@ -29,6 +29,10 @@ const resumeAssets = [
   ['01-resume/current/resume.md', 'public/resume/resume.md']
 ];
 
+const interviewNotes = [
+  ['02-interview/current/interview-reference.md', 'src/content/notes/interview/面试对答手册 - 简历项目版.md']
+];
+
 const walk = async (root) => {
   const entries = await readdir(root, { withFileTypes: true });
   const files = [];
@@ -79,11 +83,29 @@ const copyResumeAssets = async () => {
   return copied;
 };
 
+const copyInterviewNotes = async () => {
+  let copied = 0;
+  for (const [from, to] of interviewNotes) {
+    const source = join(sourceRoot, from);
+    const target = join(projectRoot, to);
+    try {
+      await stat(source);
+    } catch {
+      continue;
+    }
+    await mkdir(dirname(target), { recursive: true });
+    await cp(source, target);
+    copied += 1;
+  }
+  return copied;
+};
+
 let total = 0;
 for (const target of contentTargets) {
   total += await copyFilteredTree(target);
 }
 await rm(join(projectRoot, 'src/content/workflow-evidence'), { recursive: true, force: true });
+total += await copyInterviewNotes();
 total += await copyResumeAssets();
 
 console.log(`Synced ${total} files into knowledge-site.`);
