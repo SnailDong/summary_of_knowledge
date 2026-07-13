@@ -3,29 +3,81 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import PageBack from '../components/PageBack.astro';
 ---
 
-<BaseLayout title="个人介绍 - Summary of Knowledge">
+<BaseLayout title="个人介绍 - 蜗牛之家">
   <PageBack />
   <section class="section-header">
     <p class="eyebrow">Profile</p>
     <h1>个人介绍</h1>
-    <p>由原简历模块生成，保留当前简历入口。PDF 可直接下载，HTML 版适合浏览器查看。</p>
+    <p>快速了解我的工作方向、技术能力和工程习惯。</p>
   </section>
 
-  <div class="article-grid">
-    <a class="article-card" href="/resume/resume-paged.html">
-      <span>HTML</span>
-      <strong>分页版简历</strong>
-      <p>使用浏览器打开查看排版效果。</p>
-    </a>
-    <a class="article-card" href="/resume/chenguodong.pdf">
-      <span>PDF</span>
-      <strong>当前 PDF 简历</strong>
-      <p>适合下载、发送或手机端预览。</p>
-    </a>
-    <a class="article-card" href="/resume/resume.md">
-      <span>Markdown</span>
-      <strong>简历源文件</strong>
-      <p>保留原始 Markdown 内容。</p>
-    </a>
-  </div>
+  <section class="profile-panel">
+    <div class="profile-intro">
+      <span>陈国栋</span>
+      <h2>移动端 / IoT / AI 工程化方向</h2>
+      <p>
+        4 年移动端开发经验，负责 Flutter、Android、iOS 与 IoT 设备绑定场景。主要负责设备绑定与售后保修业务线，主导 2 套生产级 SDK 从 0→1 落地，并推动 AI Agent 参与后端、Web、测试、文档等工程交付。具备跨端架构设计、ADR 驱动决策、跨仓锁步协同与 AI 辅助质量治理经验。
+      </p>
+      <a class="primary-action" href="/resume/chenguodong.pdf" target="_blank" rel="noreferrer">查看 PDF 简历</a>
+    </div>
+  </section>
+
+  <section class="profile-section">
+    <div class="section-header compact">
+      <p class="eyebrow">Skills</p>
+      <h2>工作技能</h2>
+    </div>
+
+    <div class="skill-grid">
+      <article class="skill-card">
+        <span>01</span>
+        <h3>移动端开发</h3>
+        <ul>
+          <li>熟练掌握 Flutter / Dart，具备跨平台插件 MethodChannel 开发能力，有 Flutter Monorepo / Package 化工程组织经验。</li>
+          <li>熟练使用 Kotlin / Java 进行 Android 开发，熟悉 Jetpack、MVVM 架构和常见 App 工程实践。</li>
+          <li>熟悉 iOS Objective-C / Swift 开发，具备 CocoaPods SDK 开发与发布经验。</li>
+        </ul>
+      </article>
+
+      <article class="skill-card">
+        <span>02</span>
+        <h3>通信协议与 IoT</h3>
+        <ul>
+          <li>熟悉 Bluetooth BLE 协议，有设备扫描、特征读写、状态机管理的完整开发经验。</li>
+          <li>熟悉 WiFi 配网流程，了解 Matter 协议，有 WebRTC / FRP 专线加速实际开发经验。</li>
+          <li>了解 MQTT，具备 IoT 设备端与云端消息通信的开发经验。</li>
+        </ul>
+      </article>
+
+      <article class="skill-card">
+        <span>03</span>
+        <h3>架构设计</h3>
+        <ul>
+          <li>有 App / Cloud / Device 跨端技术方案设计能力，能输出含兼容矩阵、测试策略的完整方案。</li>
+          <li>熟悉 Ports & Adapters、Split API、ADR 驱动决策与分阶段迁移，主导过 2 套生产级 SDK 设计。</li>
+          <li>熟悉常用设计模式，有多次业务重构与 SDK 边界治理经验。</li>
+        </ul>
+      </article>
+
+      <article class="skill-card">
+        <span>04</span>
+        <h3>AI 辅助开发</h3>
+        <ul>
+          <li>熟悉 AI Agent 驱动研发，能通过架构约束、quality gate、ADR、AI-TDD 和 golden data 控制交付质量。</li>
+          <li>推动 AI 生成提交可审计、可归因，把 AI 研发从主观判断变成可追踪、可检查的工程流程。</li>
+          <li>系统化防 AI 偷懒和漏实现：Doc-Drift Gate、需求追溯矩阵、example 编译门控和多轮分级 review。</li>
+        </ul>
+      </article>
+
+      <article class="skill-card">
+        <span>05</span>
+        <h3>工程化与质量</h3>
+        <ul>
+          <li>熟悉 GitLab CI/CD、Jenkins 自动化构建，有 SonarQube 扫描、GTest / Playwright E2E 测试实践。</li>
+          <li>有 Android Framework 层开发经验，熟悉 Binder IPC、Handler 机制及 JNI / HAL 相关开发。</li>
+          <li>能够借助 AI Agent 完成后端与 Web 项目的开发、联调和问题排查，理解接口设计、数据模型、部署与可观测等工程环节。</li>
+        </ul>
+      </article>
+    </div>
+  </section>
 </BaseLayout>

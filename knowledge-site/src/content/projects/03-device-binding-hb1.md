@@ -1,9 +1,9 @@
 # 设备绑定跨端体系 + HB1 解绑保留配对
 
-> 工作类型：跨 4 仓锁步演进的设备绑定业务线；HB1「解绑保留配对」为旗舰特性
-> 仓库：`g0-android` / `g0-ios` / `g0-flutter-module` / `smartdevicecoresdk-ios`（4 仓）
-> 我的角色：绑定模块 Owner + 跨端协调人；旗舰特性 VH 4.2.0 跨 4 仓同日合入
-> 关键数据：HB1 解绑保留配对集群 g0-android 27 commit（25 个 [AI-Generated]）、4 仓同分支 `feat/unbind_device_retain_pairing` 2026-05-27 同日 merge
+> - **工作类型**：跨 4 仓锁步演进的设备绑定业务线；HB1「解绑保留配对」为旗舰特性
+> - **仓库**：`g0-android` / `g0-ios` / `g0-flutter-module` / `smartdevicecoresdk-ios`（4 仓）
+> - **我的角色**：绑定模块 Owner + 跨端协调人；旗舰特性 VH 4.2.0 跨 4 仓同日合入
+> - **关键数据**：HB1 解绑保留配对集群 g0-android 27 commit（25 个 [AI-Generated]）、4 仓同分支 `feat/unbind_device_retain_pairing` 2026-05-27 同日 merge
 
 ---
 
@@ -39,6 +39,68 @@
 | **smartdevicecoresdk-ios** | `deactivatedevice` API 新增 `retainPairing` / `cleanStorage` 参数 + 命名契约对齐 | `A4xDeviceAPI.swift`（a0c8e163 + c6d4e068 rename）|
 | **g0-flutter-module** | 保留配对关系子设备页面展示 + "hub 永远查询配对关系表" | `5236e8e2`、`4a5ecf4c` |
 | **跨仓** | 固件版本门控统一（`supportsNewFirmwareFeatures` >= 1.0.0）+ 4 仓同分支同日 merge | 4 仓 `feat/unbind_device_retain_pairing` → `test/VH_4.2.0`（2026-05-27）|
+
+---
+
+## 2.5 核心技术说明（是什么 / 做什么 / 为什么）
+
+这个项目的技术重点不在“用了多少框架”，而在跨端一致性、API 契约兼容、固件门控和可测试的路由决策。下面按关键技术逐个说明。
+
+### 2.5.1 Core SDK
+
+Core SDK 是 App 和底层设备/后端能力之间的公共接口层。它把设备管理、解绑、绑定、请求模型等能力封装成稳定 API，让 Android、iOS、Flutter 不需要各自直接拼底层协议。
+
+在 HB1 解绑保留配对里，Core SDK 承担 `deactivatedevice` 的参数扩展：新增 `retainPairing` 和 `cleanStorage`。App UI 侧只负责收集用户选择，最终通过 Core SDK 把参数传给后端。
+
+选择在 Core SDK 层扩展，是因为这个能力不是某一个页面自己的逻辑，而是设备管理契约的一部分。放在 Core SDK 后，三端可以对齐同一套 API，避免 Android、iOS、Flutter 各自发明字段和语义。
+
+### 2.5.2 `deactivatedevice` API
+
+`deactivatedevice` 是设备解绑接口，负责把设备从账号或家庭关系中移除。新增参数后，它不再只是“是否解绑”，而是可以表达“解绑账号但保留 Hub 与相机配对关系”“是否清除本地录像”等更细粒度的意图。
+
+在项目中，`retainPairing` 表示保留相机和 Hub 的无线配对关系，`cleanStorage` 表示移除时清除本地录像。两个参数从 checkbox 一路透传到 Core SDK 和后端请求体，形成完整链路。
+
+我把这两个字段设计成可选参数，并使用 nil 省略，是为了向后兼容。不传新字段时，旧调用方仍然保持旧行为；只有新页面明确传值时，后端才执行新语义。这种方式适合跨多端、多版本灰度的 App 能力演进。
+
+### 2.5.3 固件版本门控
+
+固件版本门控是根据设备固件能力决定是否开放新功能的机制。新 App 不等于所有设备都支持新协议，旧固件可能完全不认识新增字段或新增指令。
+
+在这个项目中，只有 `firmwareId >= 1.0.0` 且 HUB 有子设备时，才进入新的 `RemoveHubDeviceActivity` / `RemoveHubDeviceViewController` 页面。旧固件、无子设备、非 HUB 设备都回退到原来的解绑 dialog。
+
+这个设计是为了保护设备稳定性。HB1 新协议如果打到旧固件，可能导致解绑失败甚至设备挂起。用统一的 `supportsNewFirmwareFeatures()` 收口门控，可以保证新旧设备各走各的流程，而不是在各个页面散落判断。
+
+### 2.5.4 纯函数路由
+
+纯函数路由是把“输入什么设备状态，应该走哪个页面”抽成一个无副作用函数。它不依赖 Activity、ViewController 或 UI 上下文，只根据输入返回决策。
+
+iOS 侧我把三路分支抽成 `RemoveHubDeviceRouting`，Android 侧也通过 `DeviceHelper` 收敛路由判断。输入包括设备类型、是否 HUB、是否有子设备、固件版本是否满足要求，输出是进入新页面还是回退旧 dialog。
+
+这样做是为了让最容易出错的分支逻辑可测试。跨端项目里，UI 本身很重，但路由规则必须稳定。抽成纯函数后，可以用单测穷举旧固件、null 固件、无子设备、非 HUB 等场景，减少 AI 或人工漏掉边界 case 的风险。
+
+### 2.5.5 Checkbox 真值表测试
+
+真值表测试是把所有输入组合都列出来，逐一验证输出是否符合预期。它适合布尔开关少但组合含义重要的场景。
+
+在解绑保留配对中，页面有两个 checkbox：保留配对、清除录像。两个布尔值一共有 4 种组合，每一种都必须准确透传成对应的 `retainPairing` / `cleanStorage` 参数。
+
+我用真值表测试，是因为这个功能的核心不是 UI 多复杂，而是用户选择不能被误传。比如用户想保留配对但不清录像，如果参数反了，就是严重体验和隐私问题。4 组组合全部锁死后，后续重构 UI 或 ViewModel 都不容易破坏契约。
+
+### 2.5.6 跨 4 仓锁步
+
+跨 4 仓锁步是指 Android、iOS、Flutter、iOS Core SDK 在同一个特性分支和同一发布窗口中同步演进。它不是某个框架技术，而是一种工程组织方式。
+
+这个功能涉及页面、Core SDK 请求模型、Flutter 子设备展示和后端契约。任何一端漏改，都会出现字段不一致、页面不一致或功能半上线的问题。因此我让 4 个仓使用同名 feature 分支，并在同一日期合入对应发布分支。
+
+这样做的原因是设备绑定能力天然跨端。独立排期看似灵活，但会制造灰度期间的契约漂移。锁步策略让 API、UI、文案、测试和发布节奏对齐，适合这种用户体验必须强一致的旗舰特性。
+
+### 2.5.7 `[AI-Generated]` 提交标记
+
+`[AI-Generated]` 是在 commit message 中标记 AI 参与生成的提交。它不是为了炫技，而是为了让代码来源、审查重点和后续追溯更清楚。
+
+在这个项目里，Android 侧 27 个 commit 中 25 个带 `[AI-Generated]`，覆盖 spec、model、i18n、layout、Activity、ViewModel、路由和测试。每一步都是小提交，方便 review 时看清 AI 改了什么。
+
+我这样做，是因为跨端功能用 AI 加速时，最怕“一大坨代码不知道哪里来的”。标记和原子提交能让 review 聚焦在风险点：跨端一致性、字段命名、固件门控、真值表是否完整。这也是 AI 工程化的一部分。
 
 ---
 

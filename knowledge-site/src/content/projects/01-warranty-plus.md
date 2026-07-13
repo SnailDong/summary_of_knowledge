@@ -1,9 +1,8 @@
 # Warranty Plus 售后保修全栈体系
 
-> 工作类型：从 0→1 独立负责的全栈业务系统（Go 后端 + Flutter SDK + Admin 后台 + 可观测/数据 + AI 工程化）
-> 仓库：`customer-care`（+ `dbt` 1 个 view）
-> 我的提交：customer-care 540 commits（其中 warranty scope ~525），时间跨度 2026-04-17 → 2026-06-10（约 8 周）
-> 我的角色：架构负责人 + 唯一全栈实现者；产出 52 个 ADR（W01–W52）、10 条自研 Quality Gate 规则
+> - **工作类型**：从 0→1 独立负责的全栈业务系统（Go 后端 + Flutter SDK + Admin 后台 + 可观测/数据 + AI 工程化）
+> - **时间跨度**：2026-04-17 → 2026-06-10（约 8 周）
+> - **我的角色**：架构负责人 + 唯一全栈实现者；产出 52 个 ADR（W01–W52）、10 条自研 Quality Gate 规则
 
 ---
 
@@ -33,18 +32,117 @@
 
 ## 2. 我实现了什么（Scope）
 
-按层拆，每层都是我独立交付：
+这条业务线不是单点功能，而是从 App 入口、后端服务、运营后台、数据分析到工程质量门控的一整套闭环。我按业务链路拆成多个层次独立交付，每一层都有清晰的边界、依赖方向和验收标准。
 
-| 层 | 交付物 | 关键证据 |
-|----|--------|----------|
-| **Go 后端** | `net/http` + Ports&Adapters；2C 公开端点（checkDeviceEligibility / submitOrder / queryOrderChannels）+ 18 个 admin HMAC 端点；MySQLWarrantyRepo 仓储层 | `internal/warranty/{handler,logic,svc,adapter}/`；scaffold→Phase1-5 commit |
-| **数据库** | 7 个 warranty migration（012–018）；4 表→2 表合并（W26）；drop source（W27）；review 工作流加列（W29-W30） | `migrations/015_warranty_consolidate.sql` 等 |
-| **Flutter SDK** | Split API 二包：`warranty_plus_api`（零依赖接口）+ `warranty_plus_feature`（实现）；六边形架构 + 8 类宿主 Port；UI 全 Material 默认实现 + Builder 注入 | `app/warranty_plus/packages/` |
-| **Admin 后台** | Next.js 15 + Prisma 6 + Tailwind/shadcn；审核列表/详情/批量匹配/渠道 CRUD；HMAC 代理 + 角色 gate + PII mask/resolve | `admin/src/app/admin/warranty/` |
-| **可观测** | 6 个 2C 指标 + 12 个 admin 指标 + 5 条 PrometheusRule 告警；dual-SSOT 坍塌；Grafana dashboard sync 脚本 | `internal/warranty/handler/metrics.go`、`k8s/api/base/prometheusrule.yaml` |
-| **数据** | 13 个 Snowplow 事件 schema（含 SDK session lifecycle）；Superset prod 禁用 email 列；dbt `vw_warranty_events` view | `e2e/snowplow-schemas/warranty/`、`dbt` 仓 |
-| **部署** | 跨 AWS account 内网 ALB（admin 在 002 账号、api 在 302 账号）；IRSA 身份隔离；Harbor path 隔离 | `docs/plans/2026-05-14-api-internal-alb-prod-us.md` |
-| **AI 工程化** | 10 条自研 Quality Gate 规则（check.dart）；CI 与 pre-commit 同一入口；52 个 ADR；多轮 review SOP（MR !465 走了 5 轮） | `app/warranty_plus/tools/quality_gate/bin/check.dart` |
+### 2.1 Go 后端服务
+
+我从零实现了 Warranty Plus 的 Go 后端服务，负责承接 App 侧的延保查询、订单提交和渠道查询能力。后端采用 `net/http` + Ports & Adapters 的结构，把 handler、业务 logic、service context 和 MySQL adapter 分层拆开，避免业务规则散落在 HTTP 层。
+
+面向用户侧，我交付了 `checkDeviceEligibility`、`submitOrder`、`queryOrderChannels` 等核心端点；面向运营后台，我交付了 18 个 admin HMAC 端点，用于审核、渠道配置、批量匹配、订单状态流转等操作。底层由 `MySQLWarrantyRepo` 统一封装数据访问，让业务层只关心 warranty domain，而不直接感知 SQL 细节。
+
+### 2.2 数据模型与迁移
+
+我设计并演进了 Warranty Plus 的数据库模型。早期模型拆得较细，后续随着 owner 校验、文案、设备列表等职责逐步下沉到宿主 App，原本的 4 表结构出现了冗余。我通过 ADR-W26 将模型收敛成 `warranty_registration` 和 `warranty_channel` 两张核心表。
+
+`warranty_registration` 承载设备延保生命周期，`warranty_channel` 承载低频渠道配置。这个设计让登记、审核、过期判断都围绕同一个主实体展开，同时减少无效 join 和后台维护成本。整个演进通过 7 个 migration 分阶段完成，包括表合并、字段删除、review workflow 加列和索引调整，避免一次性大爆炸迁移。
+
+### 2.3 Flutter SDK
+
+我把 App 侧能力做成可跨 KiwiBit、VicoHome、VicoNature 三个宿主复用的 Flutter SDK，而不是写死在某一个 App 内。SDK 拆成两个包：`warranty_plus_api` 只放接口和值对象，保持零业务依赖；`warranty_plus_feature` 放具体实现、页面、repository、tracking 和默认 Material UI。
+
+架构上采用六边形设计，宿主通过 8 类 Port 注入网络、埋点、错误上报、实验配置、宿主上下文、导航、主题和本地存储。这样 SDK 不绑定 GetX、不绑定具体 UI Kit、不绑定某一家 App 的网络层。宿主只负责提供能力，SDK 负责完整的延保业务流程。
+
+### 2.4 Admin 运营后台
+
+我实现了运营审核后台，用来补齐“用户提交延保申请之后，运营如何审核和追踪”的链路。后台基于 Next.js 15 + Prisma 6 + Tailwind/shadcn，核心页面包括审核列表、订单详情、批量匹配、渠道 CRUD 和审核状态流转。
+
+后台不直接裸连业务数据库，而是通过 HMAC 代理访问后端 admin 端点，权限、PII 脱敏和敏感信息 resolve 都收在服务端边界内。这样运营可以完成审核和查询，但用户 email、订单号等敏感字段不会在普通页面里无限制暴露。
+
+### 2.5 可观测与告警
+
+我为用户侧和运营侧分别补了可观测指标。用户侧覆盖 eligibility 查询、订单提交、渠道查询等关键路径；admin 侧覆盖审核、删除、批量匹配、渠道配置等运营行为。整体交付了 6 个 2C 指标、12 个 admin 指标和 5 条 PrometheusRule 告警。
+
+这些指标不是事后装饰，而是和业务状态机一起设计的：哪些请求失败会影响用户登记、哪些审核异常会阻塞运营、哪些数据异常需要告警，都在指标命名和 label 设计里体现。Grafana dashboard 和同步脚本也一起交付，保证服务上线后能持续观察。
+
+### 2.6 数据分析链路
+
+我设计了 Warranty Plus 的事件采集和分析链路，让业务不只“能跑”，还可以被复盘。SDK 侧定义了 13 个 Snowplow 事件 schema，覆盖入口曝光、表单行为、提交结果、session lifecycle 等关键节点。
+
+数据进入数仓后，通过 dbt `vw_warranty_events` view 做统一建模，再给 Superset 做分析展示。为了避免生产分析侧泄露用户信息，我在 Superset prod 层禁用了 email 列，把“可分析”和“不过度暴露 PII”同时纳入交付标准。
+
+### 2.7 部署与生产环境接入
+
+这套系统涉及跨 AWS account 的内部访问：admin 在一个账号，api 在另一个账号。我设计并交付了内网 ALB 访问方式、IRSA 身份隔离和 Harbor path 隔离，让 admin 可以安全调用 api，同时不把内部服务暴露到公网。
+
+部署不是只把服务跑起来，还包括配置隔离、环境差异、镜像路径、K8s manifest 和生产回滚路径。对应方案在部署计划中沉淀，后续 staging/prod 推进可以按步骤复用。
+
+### 2.8 AI 工程化与质量门控
+
+这个项目大量使用 AI 辅助开发，所以我没有只靠人工 review 兜底，而是把 AI 研发过程工程化。我定义了 CLAUDE.md 作为架构边界，配合 52 个 ADR 记录关键决策，再用 10 条自研 Quality Gate 规则把约束变成机器可执行检查。
+
+Quality Gate 的入口统一为 `check.dart`，CI 和 pre-commit 共用同一套规则，覆盖 api 包纯净性、零依赖、测试文件覆盖、外部状态管理禁用、example 编译等约束。多轮 review SOP 也被固定下来，单个 MR 可以按 P0/P1/P2 分级反复收敛，避免 AI 生成代码在边界、文档或测试上漂移。
+
+---
+
+## 2.5 核心技术说明（是什么 / 做什么 / 为什么）
+
+这一节补充说明项目里出现的关键技术名词。我的目标不是只堆技术栈，而是说明每个技术在这条业务线里承担的职责，以及为什么适合当前场景。
+
+### 2.5.1 `net/http`
+
+`net/http` 是 Go 标准库自带的 HTTP 服务与客户端能力，不依赖额外 Web 框架。它提供路由入口、请求解析、响应写回、中间件组合等基础能力，是 Go 后端最底层也最稳定的 HTTP 构建块。
+
+在 Warranty Plus 里，我用 `net/http` 承接 App 侧和 Admin 侧请求，包括 eligibility 查询、订单提交、渠道查询、审核、批量匹配、渠道配置等端点。HTTP 层只负责协议适配：解析 request、校验必要 header、转换 response，不把业务规则写死在 handler 里。
+
+选择 `net/http` 的原因是这个服务的核心复杂度不在框架功能，而在业务边界、数据模型、权限、可观测和 SDK 契约。标准库足够稳定，也更容易和现有 Go 服务风格保持一致；同时它避免了引入框架后产生的额外学习成本和隐式约束，让 Ports & Adapters 的分层更清楚。
+
+### 2.5.2 Ports & Adapters
+
+Ports & Adapters 又叫六边形架构，核心思想是让业务逻辑位于中心，外部输入输出都通过接口进入或离开。HTTP、MySQL、Admin、SDK、埋点这些都属于外部 adapter，业务层只依赖抽象 port。
+
+在这个项目里，handler 是 HTTP adapter，`MySQLWarrantyRepo` 是数据库 adapter，业务 logic 只面向 repository port 编排规则。这样我可以把“用户是否可延保”“订单号如何校验”“审核状态如何变化”放在业务层，而不是散落到接口层或 SQL 层。
+
+使用这种结构，是因为 Warranty Plus 从一开始就不是单接口功能，而是后端、SDK、Admin、数据分析同时演进的业务系统。分层之后，后端可以替换数据实现、Admin 可以新增端点、SDK 可以调整调用方式，但核心业务规则不用被每个入口重复实现。
+
+### 2.5.3 MySQL 与 migration
+
+MySQL 是关系型数据库，适合保存订单、设备、渠道、审核状态这类有明确结构和唯一约束的数据。migration 是数据库结构的版本化变更脚本，用来记录每次建表、改字段、加索引、删字段的过程。
+
+在 Warranty Plus 里，MySQL 保存 `warranty_registration` 和 `warranty_channel` 两类核心数据。`warranty_registration` 负责设备延保生命周期，`warranty_channel` 负责低频渠道配置。migration 则保证从早期 4 表模型到最终 2 表模型的演进可追踪、可回滚、可 review。
+
+我选择关系型模型，是因为这条业务强依赖唯一性和状态流转：同一个 SN 不能被重复登记，审核状态要可追溯，渠道配置要稳定。用 migration 分阶段推进，而不是一次性大改，可以降低生产迁移风险，也方便在每个阶段验证数据正确性。
+
+### 2.5.4 Flutter Split-API SDK
+
+Split-API 是我在 SDK 设计里采用的拆包方式：一个包只放接口和值对象，另一个包放具体实现、页面、网络、缓存和埋点。前者是稳定契约，后者是可替换实现。
+
+在 Warranty Plus 里，`warranty_plus_api` 是零业务依赖接口包，给宿主 App 和只读消费方使用；`warranty_plus_feature` 是实现包，包含默认 Material UI、repository、tracking、配置缓存和完整延保流程。宿主只需要注入网络、导航、主题、埋点等 Port，就可以接入完整功能。
+
+这么设计的原因是三个 App 的技术栈并不完全一致。如果 SDK 直接绑定某个状态管理、UI Kit 或网络库，就会让其他 App 被迫迁就。Split-API 把“对外契约”和“内部实现”隔开，让复用成本更低，也让后续升级有明确兼容边界。
+
+### 2.5.5 Next.js、Prisma 与 HMAC Admin
+
+Next.js 是 React 生态里的全栈 Web 框架，适合快速构建运营后台页面和服务端代理接口。Prisma 是 TypeScript 生态的数据库访问工具，可以用类型化方式描述数据模型和查询。HMAC 是基于共享密钥的签名机制，用来确认请求确实来自可信后台。
+
+在 Warranty Plus 里，Next.js 负责 Admin 的审核列表、详情、批量匹配、渠道配置等页面；Prisma 负责后台侧需要的类型化数据访问和页面数据组织；HMAC 代理负责让 Admin 调用 Go 后端时带上签名，避免 admin 端点被普通客户端直接调用。
+
+选择这个组合，是因为运营后台需要快速迭代 UI 和表单，同时又必须处理权限、脱敏和敏感操作。Next.js 适合做页面和轻量服务端边界，HMAC 把 Admin 与 Go 后端之间的信任关系固定下来，Prisma 则提升后台开发时的数据类型安全和维护效率。
+
+### 2.5.6 Prometheus、Grafana、Snowplow、dbt 与 Superset
+
+Prometheus 负责采集系统和业务指标，Grafana 负责把指标做成看板和告警视图。Snowplow 是事件采集体系，适合记录用户行为。dbt 用来把原始数据加工成分析模型，Superset 用来做数据分析报表。
+
+在 Warranty Plus 里，Prometheus/Grafana 关注服务是否健康：接口失败率、审核异常、配置错误、延迟等。Snowplow/dbt/Superset 关注业务是否有效：用户是否进入延保入口、是否完成表单、哪些渠道转化更好、审核后结果如何。
+
+我把“系统可观测”和“业务分析”分开设计，是因为它们回答的问题不同。Prometheus/Grafana 让 oncall 知道系统有没有坏；Snowplow/dbt/Superset 让业务知道功能有没有产生价值。两条链路互补，既能定位故障，也能复盘转化。
+
+### 2.5.7 Quality Gate 与 ADR
+
+Quality Gate 是机器化质量门禁，用脚本把架构规则、测试要求、依赖边界和安全检查固化下来。ADR 是 Architecture Decision Record，用来记录重要架构决策的背景、备选方案、取舍和后果。
+
+在这个项目里，Quality Gate 负责防止 SDK API 包被污染、测试文件缺失、外部状态管理混入、example 编译失败、敏感信息硬编码等问题。ADR 则记录 52 个关键设计决策，例如信任边界下沉、数据库 4 表合 2 表、lazy-create baseline、Split API、Admin 审核工作流等。
+
+我这样做，是因为项目大量使用 AI 辅助开发。AI 可以加速实现，但也容易在边界、测试、文档同步上漂移。Quality Gate 把“不能做错的事”变成机器检查，ADR 把“为什么这么做”留下来，保证项目不是只跑得起来，而是可审计、可维护、可交接。
 
 ---
 

@@ -1,9 +1,9 @@
 # VH Homebase（HB1）新品上架绑定功能（三端）
 
-> 工作类型：新硬件产品（HB1/Homebase Hub）上架时的端到端绑定链路；三端 + Core SDK 协同
-> 仓库：`g0-flutter-module` / `g0-ios` / `g0-android` / `smartdevicecoresdk-ios`
-> 时间跨度：2025-12-25 → 2026-05-28（主要 2026-01~04，VH 4.0.0 → 4.2.0）
-> 我的角色：新品绑定链路 Owner，三端 + Core SDK 锁步实现
+> - **工作类型**：新硬件产品（HB1/Homebase Hub）上架时的端到端绑定链路；三端 + Core SDK 协同
+> - **仓库**：`g0-flutter-module` / `g0-ios` / `g0-android` / `smartdevicecoresdk-ios`
+> - **时间跨度**：2025-12-25 → 2026-05-28（主要 2026-01~04，VH 4.0.0 → 4.2.0）
+> - **我的角色**：新品绑定链路 Owner，三端 + Core SDK 锁步实现
 
 ---
 
@@ -37,6 +37,68 @@
 | **g0-ios** | camera 卡片绑定 Hub 流程、设备卡片显示、CS/Homebase 仅显示有线 MAC、固件门控 | `f429f67a`(camera卡片绑hub)、`c1b80fcd`(有线MAC)、`0ed1d0da`(固件门控 [AI-Generated])|
 | **g0-android** | 固件版本门控统一（`supportsNewFirmwareFeatures` >= 1.0.0）、换 WiFi 入口新/旧路由、优化获取固件版本时不断开蓝牙 | `8d737ae9`(门控 [AI-Generated])、`d68a7e3f`(> 改 >=)、`4fd3c70f` |
 | **设计文档** | `select_home_base_error_handling.md`(321 行)、`switch_network_design.md`(v1.4) | g0-flutter-module/docs/ |
+
+---
+
+## 2.5 核心技术说明（是什么 / 做什么 / 为什么）
+
+HB1 新品绑定链路的技术重点，是把“新硬件协议能力”包装成用户能顺畅完成的绑定体验。这里的关键技术主要围绕 BLE、WebSocket、固件门控、实时属性和在线/离线路由展开。
+
+### 2.5.1 BLE
+
+BLE 是 Bluetooth Low Energy，适合手机与近场设备建立低功耗连接，常用于 IoT 设备配网、读取设备信息、下发 WiFi 凭据和绑定指令。
+
+在 HB1 绑定链路中，离线设备无法通过云端通信，只能通过 BLE 获取 WiFi 列表、读取 Hub 最低固件要求、下发 `startBind` 指令。Core SDK 的 `startBindToBxOverA4XBLE` 会把 Hub SN 写入 BLE 握手包里的 `bxsn` 字段，让相机知道自己要绑定到哪一个 Hub。
+
+使用 BLE 是由设备状态决定的：离线设备没有云端通道，但手机和设备可以近场通信。BLE 也是绑定阶段最接近硬件真实状态的链路，适合做固件查询、WiFi 扫描和初始绑定。
+
+### 2.5.2 WebSocket
+
+WebSocket 是一种长连接通信协议，适合服务端和客户端之间进行实时双向通信。与普通 HTTP 请求相比，它可以在连接保持期间持续发送指令和接收结果。
+
+在这个项目里，设备在线时换网走 WebSocket 信令，例如 `trigger_query_wifi_list` 和 `trigger_connect_wifi`。如果设备已经在线并且和云端保持连接，就没有必要再绕到 BLE，直接通过已认证的云端链路让设备执行换网动作。
+
+我把在线设备走 WebSocket、离线设备走 BLE，是因为两种设备状态的物理条件不同。在线有云端通路，WebSocket 更快也更稳定；离线没有云端通路，只能依赖 BLE。把两条路径分开，比强行统一成一个抽象更可靠。
+
+### 2.5.3 固件版本门控
+
+固件版本门控是根据 Hub 固件能力决定是否允许进入新绑定流程。新协议依赖固件支持，App 不能只根据自身版本开放功能。
+
+在 HB1 上架链路里，`firmwareId >= minBxVersion` 的 Hub 才能作为可选目标。列表页先过滤不可用 Hub，绑定前再进行第二次校验。如果不满足要求，页面展示错误码 10501 对应的固件升级提示。
+
+这样设计是为了同时保证体验和正确性。列表过滤让用户不要点到不可用设备；绑定前校验防止缓存过期或绕过页面导致错误绑定。两道门控都通过后，才进入配对流程。
+
+### 2.5.4 BxVersionPreFetcher
+
+BxVersionPreFetcher 是一个固件版本预取与缓存组件，用来提前通过 BLE 获取 Hub 侧要求的最低版本，并在后续页面复用。
+
+在 `select_home_base` 页面，它会预取 `minBxVersion`；在 `add_pre_bind_camera` 绑定前校验时，优先读取这个缓存，miss 时再主动 fetch。这样既减少重复 BLE 查询，也保证最终绑定前不会漏掉版本判断。
+
+这个组件存在的原因是 BLE 查询有成本，频繁查询会拖慢页面，也可能带来连接抖动。预取 + 缓存复用把“用户等待”和“正确校验”平衡起来，让列表页和绑定页共享同一份版本信息。
+
+### 2.5.5 `getDeviceAttributes(returnRealTimeAttributes: true)`
+
+`getDeviceAttributes` 是获取设备属性的接口，`returnRealTimeAttributes: true` 表示尽量读取实时属性，而不是只用本地或服务端缓存。
+
+在这个项目里，固件版本判断依赖设备当前真实 `firmwareId`。如果只读缓存，可能出现设备已经升级但 App 还认为不可用，或者设备未升级却被误判可用的问题。因此我在版本校验链路里使用实时属性。
+
+选择实时属性，是因为固件门控属于 correctness 逻辑，不只是展示信息。绑定前判断错了会直接影响功能成败，所以这里宁可多一点读取成本，也要保证判断基于最新状态。
+
+### 2.5.6 二态加载
+
+二态加载是把页面状态收敛为“所有关键任务完成后再展示结果”，避免部分异步任务完成时提前展示中间状态。
+
+`select_home_base` 页面需要并行完成两个任务：获取 `minBxVersion` 和获取设备 `firmwareId`。我把原来的三态改成二态，只有两个任务都完成后，才展示 Hub 列表或错误页。任何一个任务失败，都进入可重试的错误状态。
+
+这样做是因为三态中间态会误导用户：列表可能先展示出来，但固件校验还没完成，用户可能点到实际不可用的 Hub。二态加载把异步协调显式化，牺牲一点点提前展示，换来更确定的用户体验。
+
+### 2.5.7 FlutterBoost
+
+FlutterBoost 是原生 App 与 Flutter 页面混合栈里常用的路由桥接能力，用来从 Android/iOS 原生页面跳转到 Flutter 页面，并传递参数。
+
+在 HB1 绑定链路中，iOS 设备卡片检测到符合条件的 Hub 后，会把 `selectedBindDeviceModel` 序列化并缓存，然后跳转到 Flutter 的 `flutter_bind_connecting_page`，把原生设备入口和 Flutter 绑定流程串起来。
+
+使用 FlutterBoost 是因为现有 App 是原生 + Flutter 混合架构。新品绑定不可能只改 Flutter 或只改原生，必须在原生设备卡片和 Flutter 配网页面之间建立稳定跳转和参数传递。
 
 ---
 

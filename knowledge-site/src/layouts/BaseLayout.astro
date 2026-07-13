@@ -2,8 +2,8 @@
 import '../styles/site.css';
 
 const {
-  title = 'Summary of Knowledge',
-  description = '个人知识库静态站'
+  title = '蜗牛之家',
+  description = '蜗牛之家静态知识库'
 } = Astro.props;
 
 const navItems = [
@@ -25,7 +25,7 @@ const navItems = [
   </head>
   <body>
     <header class="site-header">
-      <a class="brand" href="/">Summary of Knowledge</a>
+      <a class="brand" href="/">蜗牛之家</a>
       <nav class="site-nav" aria-label="主导航">
         {navItems.map((item) => (
           <a href={item.href}>{item.label}</a>

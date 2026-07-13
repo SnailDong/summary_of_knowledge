@@ -1,9 +1,9 @@
 # Provisioning Kit 配网 SDK 0→1（六边形架构 + 多次架构演进）
 
-> 工作类型：从 0→1 独立设计并实现的 Flutter 设备配网/绑定 SDK；六边形（Ports & Adapters）架构 + 分阶段迁移
-> 仓库：`provisioning-kit`
-> 我的提交：176 / 177（占 99.4%），时间跨度 2026-04-20 → 2026-06-12（约 53 天）
-> 我的角色：架构负责人 + 唯一实现者；产出 22 个 ADR（v1.x→v2→v3 三代演进）、L1-L4 分层测试体系
+> - **工作类型**：从 0→1 独立设计并实现的 Flutter 设备配网/绑定 SDK；六边形（Ports & Adapters）架构 + 分阶段迁移
+> - **仓库**：`provisioning-kit`
+> - **我的提交**：176 / 177（占 99.4%），时间跨度 2026-04-20 → 2026-06-12（约 53 天）
+> - **我的角色**：架构负责人 + 唯一实现者；产出 22 个 ADR（v1.x→v2→v3 三代演进）、L1-L4 分层测试体系
 
 ---
 
@@ -45,6 +45,68 @@
 | **测试体系** | Fake 装配（FakeSessionPort/FakeHttpClient/FakeClock/NoOpTracker/FakeFeatureFlag）+ L1-L4 分层（~90/~60/~30/external） | `feature/lib/testing/` |
 | **质量门控** | `.gitlab-ci.yml`：lint:format / lint:analyze / i18n:verify(ARB ≥95%) / test:flutter / build:android-plugin | `.gitlab-ci.yml` |
 | **ADR + 迁移** | 22 个 ADR（ADR-09/12/14-17/18-22/24）；分阶段迁移 Phase 0→R1-R11 + bind-migration W1/W2/W3 | `docs/architecture/overview.md` |
+
+---
+
+## 2.5 核心技术说明（是什么 / 做什么 / 为什么）
+
+Provisioning Kit 的技术选型围绕一个目标展开：把强依赖 BLE、WiFi、Native 和硬件状态的配网流程，做成可以跨宿主复用、可以测试、可以持续演进的 SDK。
+
+### 2.5.1 Flutter SDK
+
+Flutter SDK 是给多个 Flutter 宿主复用的一组能力包。它不只是 UI 组件，而是把页面、流程编排、状态处理、错误兜底、Native 通道、埋点和宿主注入契约一起封装起来。
+
+在这个项目里，Provisioning Kit 承担设备发现、选择配网方式、WiFi 列表获取、绑定流程、Hub 子设备绑定、错误页和多语言文案等能力。宿主 App 不再复制一套配网代码，只需要实现 SDK 需要的 Port，例如网络、主题、埋点、FeatureFlag 和 HostBridge。
+
+选择 Flutter SDK 的原因是这些消费端 App 都需要类似的配网体验，但各自工程里散落实现会导致重复开发和行为漂移。SDK 化之后，配网主流程由一处维护，新宿主或新协议只改 adapter，不重写全链路。
+
+### 2.5.2 Split API
+
+Split API 是把 SDK 拆成“接口包”和“实现包”的设计。接口包只暴露稳定契约和值对象，实现包才包含 UI、Native Plugin、缓存、埋点和具体流程。
+
+在 Provisioning Kit 里，`flutter_provisioning_api` 是零外部运行时依赖的纯接口包；`flutter_provisioning_feature` 是实现包，里面包含 30+ 页面、service 编排、adapter、Android Plugin 和 i18n。只读消费方可以只依赖 api 包，不被 UI、Native、Crowdin 或具体实现传染。
+
+这样设计是为了控制依赖面。配网 SDK 很容易变成一个“什么都带”的大包，如果所有消费方都被迫依赖完整实现，后续升级和接入都会很重。Split API 把稳定契约放在最外层，让实现可以演进，但消费方不被频繁影响。
+
+### 2.5.3 Ports & Adapters
+
+Ports & Adapters 是一种把业务核心和外部系统隔离的架构方式。Port 是 SDK 需要的能力接口，Adapter 是宿主或底层系统提供的具体实现。
+
+在这个项目里，HttpClient、HostBridge、Tracker、FeatureFlag、Theme、ErrorReporter 都是宿主 Port；Native AAR、MethodChannel、EventChannel、BackendFacade 是不同方向的 adapter。SDK 核心只编排“配网应该怎么走”，不关心宿主用什么网络库、什么埋点平台、什么主题体系。
+
+使用它的原因是配网链路跨 Flutter、Android Native、BLE、WiFi、后端和宿主 App。如果这些外部能力直接写死在 SDK 内部，后续换宿主、换 Native 实现、换协议都会牵一发动全身。通过 Port 抽象，底层已经经历 v1、v2、v3 三次替换，但上层流程仍然能保持稳定。
+
+### 2.5.4 MethodChannel 与 EventChannel
+
+MethodChannel 是 Flutter 和 Native 之间发起一次性调用的通道，适合“调用一个方法并拿结果”。EventChannel 是 Native 持续向 Flutter 推送事件的通道，适合设备发现、绑定进度这类持续变化的数据。
+
+在 Provisioning Kit 中，MethodChannel 承担 createSession、prepare、fetchWifiList、commitBind 等命令式调用；两个 EventChannel 分别承接 Discovery 和 Bind 事件流。这样 Flutter 可以触发 Native 配网能力，同时持续接收 BLE 扫描结果和绑定阶段变化。
+
+我这样拆，是因为配网不是一次 HTTP 请求，而是长时间、多阶段、会失败也会重试的流程。命令用 MethodChannel 更清晰，状态流用 EventChannel 更自然；两类通道职责分开后，调试和测试也更容易。
+
+### 2.5.5 Native AAR 与 HAL 注入
+
+AAR 是 Android 平台的可复用二进制库格式，适合把 Native 配网核心作为独立制品交付。HAL 是 Hardware Abstraction Layer，表示对底层硬件或系统能力的抽象。
+
+在 Provisioning Kit v3 中，Native 配网核心收敛到 `com.addx.provisioning:provisioning-android` AAR。CloudHAL、WiFiHAL 等底层能力由宿主注入，SDK 不直接绑定某个 App 的 Native 实现。Flutter 层通过 plugin 和 channel 调用 AAR，AAR 再调用宿主提供的 HAL。
+
+选择 AAR + HAL 注入，是因为配网底层需要多端共享且独立演进。如果 SDK 直接内置某一套 Native 实现，新宿主接入就会被绑死；如果每个宿主各写一份，又会重复造轮子。AAR 负责沉淀核心能力，HAL 注入负责保留宿主差异。
+
+### 2.5.6 Session API
+
+Session API 是把一次配网过程建模成一个会话，而不是散落的一堆独立函数。会话里保存当前阶段、设备上下文、WiFi 信息和绑定状态。
+
+在这个项目里，v3 的 Native 契约从零散调用收敛为 `createSession → prepare → fetchWifiList → commitBind`。Flutter 侧通过 `BindSession` 和 `BindSessionController` 管理跨页状态，让用户从发现页、WiFi 页、连接页切换时不会丢失上下文。
+
+这样设计是因为配网天然是一个长流程。用 session 承载上下文，比到处传参数更稳定，也更适合跨页、重试、超时和错误恢复。底层 Native 方案替换时，只要 session 契约稳定，UI 和业务编排就不用重写。
+
+### 2.5.7 Fake 测试装配
+
+Fake 测试装配是用可控的假实现替代真实设备、真实后端、真实时间和真实埋点，让强硬件依赖的流程也能在 CI 中测试。
+
+Provisioning Kit 提供 FakeSessionPort、FakeHttpClient、FakeClock、NoOpTracker、FakeFeatureFlag 等组件。测试可以模拟设备发现、WiFi 扫描、绑定成功、绑定失败、180s 超时、A/B 分支和页面跳转，不需要真设备也能跑 L1-L3。
+
+这是这个 SDK 健康性的关键。配网如果只能靠真机回归，AI 或开发者很容易跳过测试。Fake 装配把核心流程变成可重复、可自动化的测试，把真机验证缩小到 AAR 兼容和 HAL 集成那一薄层。
 
 ---
 
