@@ -6,3 +6,7 @@ publish = "dist"
 [build.environment]
 ASTRO_TELEMETRY_DISABLED = "1"
 NODE_VERSION = "20"
+
+[[edge_functions]]
+function = "password-protect"
+path = "/*"
